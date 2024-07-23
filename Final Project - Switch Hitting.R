@@ -17,7 +17,7 @@ library(ggplot2)
 library(plotly)
 
 #Load datasets
-Leaguevs_LHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 League vs LHP.xlsx")
+League_vs_LHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 League vs LHP.xlsx")
 League_vs_RHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 League vs RHP.xlsx")
 SH_vs_LHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 Switch-Hitter vs LHP as RHH.xlsx")
 SH_vs_RHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 Switch-Hitter vs RHP as LHH.xlsx")
