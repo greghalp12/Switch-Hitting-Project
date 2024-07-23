@@ -23,11 +23,7 @@ SH_vs_LHP <- read_excel("2018-2023 Switch-Hitter vs LHP as RHH.xlsx")
 SH_vs_RHP <- read_excel("2018-2023 Switch-Hitter vs RHP as LHH.xlsx")
 
 #combining switch hitter data sets
-SHtotals <- rbind(SH_vs_LHP, SH_vs_RHP)
-
-SHtotals <- SHtotals %>% filter()
-SHtotals <- arrange(SHtotals,Name)
-?arrange
+SHfull <- left_join(SH_vs_LHP,SH_vs_RHP, by = 'PlayerId')
 
 #combining league data sets
 league_totals <- left_join(League_vs_LHP, League_vs_RHP, by = 'Season')
@@ -62,17 +58,17 @@ names(league_av)=c("Name", "PlayerId", "Pitcher_Handedness.L","PA.L", "wOBA.L",
 
 
 #Filtering Switch hitting variables
-SHtotals_filt <- SHtotals %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
+SH_filt <- SHfull %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
                                      OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
                                      `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
                                      `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
 
 #Rounding all numeric values to 3 decimal places
-SHtotals_filt <- SHtotals_filt %>% 
+SH_filt <- SH_filt %>% 
   mutate_if(is.numeric, round,3)
 
 #Renaming column names
-SHtotals_filt <- SHtotals_filt %>%
+SH_filt <- SH_filt %>%
   rename(Name = Name.x, `Pitcher_Handedness.L` = `Pitcher Handedness.x`,
          PA.L = PA.x, wOBA.L = wOBA.x, OPS.L = OPS.x, `GB%.L` = `GB%.x`, 
          `LD%.L` = `LD%.x`, `Hard%.L` = `Hard%.x`, `BB%.L` = `BB%.x`, 
@@ -81,8 +77,7 @@ SHtotals_filt <- SHtotals_filt %>%
          `LD%.R` = `LD%.y`, `Hard%.R` = `Hard%.y`, `BB%.R` = `BB%.y`, 
          `K%.R` = `K%.y`)
 
-names(SHtotals_filt)==names(league_av) #Making sure names are the same before binding
+names(SH_filt)==names(league_av) #Making sure names are the same before binding
 
-#Add Joe Average to bottom of SHtotals dataset
-totals <- rbind(SHtotals_filt, league_av)
-
+#Add Joe Average to bottom of SH_filt dataset
+hit_metrics <- rbind(SH_filt, league_av)
