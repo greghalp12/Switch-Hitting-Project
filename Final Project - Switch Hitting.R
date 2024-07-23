@@ -17,10 +17,10 @@ library(ggplot2)
 library(plotly)
 
 #Load datasets
-League_vs_LHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 League vs LHP.xlsx")
-League_vs_RHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 League vs RHP.xlsx")
-SH_vs_LHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 Switch-Hitter vs LHP as RHH.xlsx")
-SH_vs_RHP <- read_excel("Northwestern/MSDS 456 - Sports Performance Analytics/Final Project/2018-2023 Switch-Hitter vs RHP as LHH.xlsx")
+League_vs_LHP <- read_excel("2018-2023 League vs LHP.xlsx")
+League_vs_RHP <- read_excel("2018-2023 League vs RHP.xlsx")
+SH_vs_LHP <- read_excel("2018-2023 Switch-Hitter vs LHP as RHH.xlsx")
+SH_vs_RHP <- read_excel("2018-2023 Switch-Hitter vs RHP as LHH.xlsx")
 
 #subsetting switch-hitters, totaling PAs
 Martetotal <- left_join(SH_vs_LHP, SH_vs_RHP, by = (PlayerId == 13613))
