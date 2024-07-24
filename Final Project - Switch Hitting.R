@@ -14,6 +14,7 @@ library(readr)
 library(readxl)
 library(dplyr)
 library(ggplot2)
+library(ggrepel)
 library(plotly)
 
 #Load data sets
@@ -59,9 +60,9 @@ names(league_av)=c("Name", "PlayerId", "Pitcher_Handedness.L","PA.L", "wOBA.L",
 
 #Filtering Switch hitting variables
 SH_filt <- SHfull %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
-                                     OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
-                                     `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
-                                     `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
+                             OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
+                             `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
+                             `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
 
 #Rounding all numeric values to 3 decimal places
 SH_filt <- SH_filt %>% 
@@ -80,4 +81,49 @@ SH_filt <- SH_filt %>%
 names(SH_filt)==names(league_av) #Making sure names are the same before binding
 
 #Add Joe Average to bottom of SH_filt dataset
-hit_metrics <- rbind(SH_filt, league_av)
+hit_metrics <- rbind(SH_filt, league_av)3
+View(hit_metrics)
+
+ggplot(data = hit_metrics, aes(x=OPS.R, y=OPS.L)) +
+  geom_point(aes(color=Name, size = PlayerId))
+
+
+ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
+  geom_vline(xintercept = 0.731) +
+  geom_hline(yintercept = 0.736) +
+  annotate("rect", xmin = Inf, xmax = 0.731, ymin = Inf, ymax = 0.736, fill = "chartreuse2") +
+  annotate("rect", xmin = -Inf, xmax = 0.731, ymin = -Inf, ymax = 0.736, fill = "coral") +
+  annotate("rect", xmin = 0.731, xmax = Inf, ymin = 0.736, ymax = -Inf, fill = "darkgoldenrod1") +
+  annotate("rect", xmin = 0.731, xmax = -Inf, ymin = Inf, ymax = 0.736, fill = "darkgoldenrod2") +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = Name), size = 2, color = "black") +
+  labs(title = "OPS EDA", x = "OPS.R", y = "OPS.L")
+
+hit_metrics2 = hit_metrics
+
+#Add a new column 'Color' with default value 'black'
+hit_metrics2$Colour <- "black"
+
+# Set new column values to appropriate colours
+hit_metrics2$Colour[hit_metrics2$OPS.R>0.731 & hit_metrics2$OPS.L > 0.736]="green"
+hit_metrics2$Colour[hit_metrics2$OPS.R < 0.731 & hit_metrics2$OPS.L < 0.736]="red"
+hit_metrics2$Colour[hit_metrics2$OPS.R > 0.731 & hit_metrics2$OPS.L < 0.736] = "darkgoldenrod1"
+hit_metrics2$Colour[hit_metrics2$OPS.R < 0.731 & hit_metrics2$OPS.L > 0.736] = "darkgoldenrod1"
+# Plot all points at once, using newly generated colours
+plot(hit_metrics2$OPS.R,hit_metrics2$OPS.L, 
+     abline(v = 0.731, h=0.736), 
+     xlim = c(0.5,1), 
+     ylim=c(0.5,1), 
+     col=hit_metrics2$Colour,
+     main = "OPS EDA", 
+     xlab = "OPS.R", 
+     ylab = "OPS.L")
+
+text(hit_metrics2$OPS.R,
+     hit_metrics2$OPS.L,
+     labels = hit_metrics2$Name,
+     cex = 0.5,
+     pos = 1)
+
+hist(hit_metrics$OPS.R)
+hist(hit_metrics$OPS.L)
