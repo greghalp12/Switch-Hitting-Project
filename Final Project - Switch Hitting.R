@@ -15,6 +15,7 @@ library(readxl)
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+library(gridExtra)
 library(plotly)
 
 #Load data sets
@@ -81,49 +82,75 @@ SH_filt <- SH_filt %>%
 names(SH_filt)==names(league_av) #Making sure names are the same before binding
 
 #Add Joe Average to bottom of SH_filt dataset
-hit_metrics <- rbind(SH_filt, league_av)3
+hit_metrics <- rbind(SH_filt, league_av)
 View(hit_metrics)
 
 ggplot(data = hit_metrics, aes(x=OPS.R, y=OPS.L)) +
   geom_point(aes(color=Name, size = PlayerId))
 
-
-ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
-  geom_vline(xintercept = 0.731) +
-  geom_hline(yintercept = 0.736) +
-  annotate("rect", xmin = Inf, xmax = 0.731, ymin = Inf, ymax = 0.736, fill = "chartreuse2") +
-  annotate("rect", xmin = -Inf, xmax = 0.731, ymin = -Inf, ymax = 0.736, fill = "coral") +
-  annotate("rect", xmin = 0.731, xmax = Inf, ymin = 0.736, ymax = -Inf, fill = "darkgoldenrod1") +
-  annotate("rect", xmin = 0.731, xmax = -Inf, ymin = Inf, ymax = 0.736, fill = "darkgoldenrod2") +
-  geom_point(size = 2) +
-  geom_text_repel(aes(label = Name), size = 2, color = "black") +
-  labs(title = "OPS EDA", x = "OPS.R", y = "OPS.L")
-
-hit_metrics2 = hit_metrics
-
 #Add a new column 'Color' with default value 'black'
-hit_metrics2$Colour <- "black"
+hit_metrics$Color <- "black"
 
 # Set new column values to appropriate colours
-hit_metrics2$Colour[hit_metrics2$OPS.R>0.731 & hit_metrics2$OPS.L > 0.736]="green"
-hit_metrics2$Colour[hit_metrics2$OPS.R < 0.731 & hit_metrics2$OPS.L < 0.736]="red"
-hit_metrics2$Colour[hit_metrics2$OPS.R > 0.731 & hit_metrics2$OPS.L < 0.736] = "darkgoldenrod1"
-hit_metrics2$Colour[hit_metrics2$OPS.R < 0.731 & hit_metrics2$OPS.L > 0.736] = "darkgoldenrod1"
-# Plot all points at once, using newly generated colours
-plot(hit_metrics2$OPS.R,hit_metrics2$OPS.L, 
-     abline(v = 0.731, h=0.736), 
-     xlim = c(0.5,1), 
-     ylim=c(0.5,1), 
-     col=hit_metrics2$Colour,
-     main = "OPS EDA", 
-     xlab = "OPS.R", 
-     ylab = "OPS.L")
+hit_metrics$Color[hit_metrics$OPS.R >0.731 & hit_metrics$OPS.L > 0.736]="green"
+hit_metrics$Color[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L < 0.736]="red"
+hit_metrics$Color[hit_metrics$OPS.R > 0.731 & hit_metrics$OPS.L < 0.736] = "darkgoldenrod1"
+hit_metrics$Color[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L > 0.736] = "darkgoldenrod1"
 
-text(hit_metrics2$OPS.R,
-     hit_metrics2$OPS.L,
-     labels = hit_metrics2$Name,
-     cex = 0.5,
-     pos = 1)
+#Scatterplot of EDA on OPS 
+ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, fill = "white") +
+  geom_vline(xintercept = 0.731) +
+  geom_hline(yintercept = 0.736) +
+  geom_point(color = hit_metrics$Color) +
+#  geom_text_repel(aes(label = Name), size = 4, color = "black") +
+  geom_text_repel(aes(label=ifelse(PlayerId==999999, as.character("League Avg"), '')), 
+                  cex = 2.75, hjust = 0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.min(hit_metrics$OPS.R),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.max(hit_metrics$OPS.R),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.min(hit_metrics$OPS.L),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.max(hit_metrics$OPS.L),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  labs(title = "EDA on OPS", x = "OPS.R", y = "OPS.L") +
+  theme(plot.title=element_text(hjust=0.4, size = 15))
 
+#Combining Switch-hitter data for total PAs
+SH_binded <- rbind(SH_vs_LHP, SH_vs_RHP)
+
+#Filtering columns required
+SH_binded <- SH_binded %>% select(Name, PlayerId, `Pitcher Handedness`, PA, wOBA,
+                                  `GB%`,`LD%`, `Hard%`, `BB%`, `K%`)  
+
+#Rounding %s to 3 digits
+SH_binded <- SH_binded %>% mutate_if(is.numeric, round, 3)  
+
+#create total PA for League
+League_binded <- rbind(League_vs_LHP, League_vs_RHP)
+
+#Filtering columns required
+League_binded <- League_binded %>% select(`Pitcher Handedness`, PA, wOBA,
+                                  `GB%`,`LD%`, `Hard%`, `BB%`, `K%`)  
+
+#Rounding %s to 3 digits
+League_binded <- League_binded %>% mutate_if(is.numeric, round, 3)
+
+
+#Switch hitter bar chart of PAs
+SH_bar <- ggplot(data = SH_binded, aes(x=`Pitcher Handedness`, y= PA, fill=`Pitcher Handedness`)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual(values=c("Left" = "red", "Right" = "blue")) +
+  labs(title = "Switch-Hitter PA vs LHP/RHP", ylab="Plate Appearances") + 
+  theme(legend.position="none")
+
+#League bar chart of PAs
+League_bar <- ggplot(data = League_binded, aes(x=`Pitcher Handedness`, y= PA, fill=`Pitcher Handedness`)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual(values=c("Left" = "red", "Right" = "blue")) +
+  labs(title = "League PA vs LHP/RHP", ylab="Plate Appearances") +
+  theme(legend.position="none")
+grid.arrange(SH_bar, League_bar, nrow=1, ncol=2)
 hist(hit_metrics$OPS.R)
 hist(hit_metrics$OPS.L)
