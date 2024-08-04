@@ -30,6 +30,41 @@ SHfull <- left_join(SH_vs_LHP,SH_vs_RHP, by = 'PlayerId')
 #combining league data sets
 league_totals <- left_join(League_vs_LHP, League_vs_RHP, by = 'Season')
 
+#Combining Switch-hitter data for total PAs
+SH_binded <- rbind(SH_vs_LHP, SH_vs_RHP)
+
+#Filtering columns required
+SH_binded <- SH_binded %>% select(Name, PlayerId, `Pitcher Handedness`, PA, wOBA,
+                                  `GB%`,`LD%`, `Hard%`, `BB%`, `K%`)  
+
+#Rounding %s to 3 digits
+SH_binded <- SH_binded %>% mutate_if(is.numeric, round, 3)  
+
+#create total PA for League
+League_binded <- rbind(League_vs_LHP, League_vs_RHP)
+
+#Filtering columns required
+League_binded <- League_binded %>% select(`Pitcher Handedness`, PA, wOBA,
+                                          `GB%`,`LD%`, `Hard%`, `BB%`, `K%`)  
+
+#Rounding %s to 3 digits
+League_binded <- League_binded %>% mutate_if(is.numeric, round, 3)
+
+#Switch hitter bar chart of PAs
+SH_bar <- ggplot(data = SH_binded, aes(x=`Pitcher Handedness`, y= PA, fill=`Pitcher Handedness`)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual(values=c("Left" = "red", "Right" = "blue")) +
+  labs(title = "Switch-Hitter PA vs LHP/RHP", ylab="Plate Appearances") + 
+  theme(legend.position="none")
+
+#League bar chart of PAs
+League_bar <- ggplot(data = League_binded, aes(x=`Pitcher Handedness`, y= PA, fill=`Pitcher Handedness`)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual(values=c("Left" = "red", "Right" = "blue")) +
+  labs(title = "League PA vs LHP/RHP", ylab="Plate Appearances") +
+  theme(legend.position="none")
+grid.arrange(SH_bar, League_bar, nrow=1, ncol=2)
+
 #Creating a 'League Average' Player
 league_av <- data.frame(Name = "Joe Average",
                         PlayerId = 999999,
@@ -91,19 +126,19 @@ ggplot(data = hit_metrics, aes(x=OPS.R, y=OPS.L)) +
 #Add a new column 'Color' with default value 'black'
 hit_metrics$Color <- "black"
 
-# Set new column values to appropriate colours
-hit_metrics$Color[hit_metrics$OPS.R >0.731 & hit_metrics$OPS.L > 0.736]="green"
-hit_metrics$Color[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L < 0.736]="red"
-hit_metrics$Color[hit_metrics$OPS.R > 0.731 & hit_metrics$OPS.L < 0.736] = "darkgoldenrod1"
-hit_metrics$Color[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L > 0.736] = "darkgoldenrod1"
+# Set new column values to appropriate colors for OPS
+hit_metrics$Color_OPS[hit_metrics$OPS.R >0.731 & hit_metrics$OPS.L > 0.736]="green"
+hit_metrics$Color_OPS[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L < 0.736]="red"
+hit_metrics$Color_OPS[hit_metrics$OPS.R > 0.731 & hit_metrics$OPS.L < 0.736] = "darkgoldenrod1"
+hit_metrics$Color_OPS[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L > 0.736] = "darkgoldenrod1"
 
 #Scatterplot of EDA on OPS 
 ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
   annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, fill = "white") +
   geom_vline(xintercept = 0.731) +
   geom_hline(yintercept = 0.736) +
-  geom_point(color = hit_metrics$Color) +
-#  geom_text_repel(aes(label = Name), size = 4, color = "black") +
+  geom_point(color = hit_metrics$Color_OPS) +
+  #  geom_text_repel(aes(label = Name), size = 4, color = "black") +
   geom_text_repel(aes(label=ifelse(PlayerId==999999, as.character("League Avg"), '')), 
                   cex = 2.75, hjust = 0, vjust=0) +
   geom_text_repel(data = hit_metrics[which.min(hit_metrics$OPS.R),], 
@@ -117,40 +152,58 @@ ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
   labs(title = "EDA on OPS", x = "OPS.R", y = "OPS.L") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
 
-#Combining Switch-hitter data for total PAs
-SH_binded <- rbind(SH_vs_LHP, SH_vs_RHP)
+# Set new column values to appropriate colors for K%
+hit_metrics$Color_GB[hit_metrics$`GB%.R` < 0.426 & hit_metrics$`GB%.L` < 0.434]="green"
+hit_metrics$Color_GB[hit_metrics$`GB%.R` > 0.426 & hit_metrics$`GB%.L` > 0.434]="red"
+hit_metrics$Color_GB[hit_metrics$`GB%.R` < 0.426 & hit_metrics$`GB%.L` > 0.434]="darkgoldenrod1"
+hit_metrics$Color_GB[hit_metrics$`GB%.R` > 0.426 & hit_metrics$`GB%.L` < 0.434]="darkgoldenrod1"
 
-#Filtering columns required
-SH_binded <- SH_binded %>% select(Name, PlayerId, `Pitcher Handedness`, PA, wOBA,
-                                  `GB%`,`LD%`, `Hard%`, `BB%`, `K%`)  
+#Scatterplot of EDA on GB% 
+ggplot(data = hit_metrics, aes(x =`GB%.R`, y = `GB%.L`)) +
+  annotate("rect", xmin = 0.2, xmax = 0.6, ymin = 0.2, ymax = 0.6, fill = "white") +
+  geom_vline(xintercept = 0.426) +
+  geom_hline(yintercept = 0.434) +
+  geom_point(color = hit_metrics$Color_GB) +
+  scale_x_reverse() +
+  scale_y_reverse() +
+  #  geom_text_repel(aes(label = Name), size = 4, color = "black") +
+  geom_text_repel(aes(label=ifelse(PlayerId==999999, as.character("League Avg"), '')), 
+                  cex = 2.75, hjust = 0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.min(hit_metrics$`GB%.R`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.max(hit_metrics$`GB%.R`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.min(hit_metrics$`GB%.L`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.max(hit_metrics$`GB%.L`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  labs(title = "EDA on GB%", x = "GB%.R", y = "GB%.L") +
+  theme(plot.title=element_text(hjust=0.4, size = 15))
 
-#Rounding %s to 3 digits
-SH_binded <- SH_binded %>% mutate_if(is.numeric, round, 3)  
+# Set new column values to appropriate colors for K%
+hit_metrics$Color_K[hit_metrics$`K%.R` < 0.229 & hit_metrics$`K%.L` < 0.226]="green"
+hit_metrics$Color_K[hit_metrics$`K%.R` > 0.229 & hit_metrics$`K%.L` > 0.226]="red"
+hit_metrics$Color_K[hit_metrics$`K%.R` < 0.229 & hit_metrics$`K%.L` > 0.226]="darkgoldenrod1"
+hit_metrics$Color_K[hit_metrics$`K%.R` > 0.229 & hit_metrics$`K%.L` < 0.226]="darkgoldenrod1"
 
-#create total PA for League
-League_binded <- rbind(League_vs_LHP, League_vs_RHP)
-
-#Filtering columns required
-League_binded <- League_binded %>% select(`Pitcher Handedness`, PA, wOBA,
-                                  `GB%`,`LD%`, `Hard%`, `BB%`, `K%`)  
-
-#Rounding %s to 3 digits
-League_binded <- League_binded %>% mutate_if(is.numeric, round, 3)
-
-
-#Switch hitter bar chart of PAs
-SH_bar <- ggplot(data = SH_binded, aes(x=`Pitcher Handedness`, y= PA, fill=`Pitcher Handedness`)) +
-  geom_bar(stat='identity') +
-  scale_fill_manual(values=c("Left" = "red", "Right" = "blue")) +
-  labs(title = "Switch-Hitter PA vs LHP/RHP", ylab="Plate Appearances") + 
-  theme(legend.position="none")
-
-#League bar chart of PAs
-League_bar <- ggplot(data = League_binded, aes(x=`Pitcher Handedness`, y= PA, fill=`Pitcher Handedness`)) +
-  geom_bar(stat='identity') +
-  scale_fill_manual(values=c("Left" = "red", "Right" = "blue")) +
-  labs(title = "League PA vs LHP/RHP", ylab="Plate Appearances") +
-  theme(legend.position="none")
-grid.arrange(SH_bar, League_bar, nrow=1, ncol=2)
-hist(hit_metrics$OPS.R)
-hist(hit_metrics$OPS.L)
+#Scatterplot of EDA on K% 
+ggplot(data = hit_metrics, aes(x =`K%.R`, y = `K%.L`)) +
+  annotate("rect", xmin = 0.1, xmax = 0.3, ymin = 0.1, ymax = 0.3, fill = "white") +
+  geom_vline(xintercept = 0.229) +
+  geom_hline(yintercept = 0.226) +
+  geom_point(color = hit_metrics$Color_K) +
+  scale_x_reverse() +
+  scale_y_reverse() +
+  #  geom_text_repel(aes(label = Name), size = 4, color = "black") +
+  geom_text_repel(aes(label=ifelse(PlayerId==999999, as.character("League Avg"), '')), 
+                  cex = 2.75, hjust = 0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.min(hit_metrics$`K%.R`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.max(hit_metrics$`K%.R`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.min(hit_metrics$`K%.L`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  geom_text_repel(data = hit_metrics[which.max(hit_metrics$`K%.L`),], 
+                  aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
+  labs(title = "EDA on K%", x = "K%.R", y = "K%.L") +
+  theme(plot.title=element_text(hjust=0.4, size = 15))
