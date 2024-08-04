@@ -17,6 +17,8 @@ library(ggplot2)
 library(ggrepel)
 library(gridExtra)
 library(plotly)
+library(randomForest)
+library(caTools)
 
 #Load data sets
 League_vs_LHP <- read_excel("2018-2023 League vs LHP.xlsx")
@@ -207,3 +209,60 @@ ggplot(data = hit_metrics, aes(x =`K%.R`, y = `K%.L`)) +
                   aes(label=Name), cex = 2.75, hjust=0, vjust=0) +
   labs(title = "EDA on K%", x = "K%.R", y = "K%.L") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
+
+
+
+#Creating a data set to train the model
+
+LHH_vs_LHP <- read_csv("2018-2023 LHH vs LHP - min200.csv")
+LHH_vs_RHP <- read_csv("2018-2023 LHH vs RHP - min500.csv")
+RHH_vs_LHP <- read_csv("2018-2023 RHH vs LHP - min250.csv")
+RHH_vs_RHP <- read_csv("2018-2023 RHH vs RHP - min500.csv")
+
+#Inner joining to get split data for each hitter
+LHH_splits <-  inner_join(LHH_vs_LHP,LHH_vs_RHP, by = 'PlayerId')
+RHH_splits <- inner_join(RHH_vs_LHP, RHH_vs_RHP, by = 'PlayerId')
+
+#Filter each splits table
+LHH_splits <- LHH_splits %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
+                             OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
+                             `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
+                             `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
+RHH_splits <- RHH_splits %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
+                                    OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
+                                    `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
+                                    `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
+
+#Rounding all numeric values to 3 decimal places
+LHH_splits <- LHH_splits %>% 
+  mutate_if(is.numeric, round,3)
+RHH_splits <- RHH_splits %>% 
+  mutate_if(is.numeric, round,3)
+
+#Adjusting variable names to .L / .R
+LHH_splits <- LHH_splits %>%
+  rename(Name = Name.x, `Pitcher_Handedness.L` = `Pitcher Handedness.x`,
+         PA.L = PA.x, wOBA.L = wOBA.x, OPS.L = OPS.x, `GB%.L` = `GB%.x`, 
+         `LD%.L` = `LD%.x`, `Hard%.L` = `Hard%.x`, `BB%.L` = `BB%.x`, 
+         `K%.L` = `K%.x`, `Pitcher_Handedness.R` = `Pitcher Handedness.y`, 
+         PA.R = PA.y, wOBA.R = wOBA.y, OPS.R = OPS.y, `GB%.R` = `GB%.y`,
+         `LD%.R` = `LD%.y`, `Hard%.R` = `Hard%.y`, `BB%.R` = `BB%.y`, 
+         `K%.R` = `K%.y`)
+RHH_splits <- RHH_splits %>%
+  rename(Name = Name.x, `Pitcher_Handedness.L` = `Pitcher Handedness.x`,
+         PA.L = PA.x, wOBA.L = wOBA.x, OPS.L = OPS.x, `GB%.L` = `GB%.x`, 
+         `LD%.L` = `LD%.x`, `Hard%.L` = `Hard%.x`, `BB%.L` = `BB%.x`, 
+         `K%.L` = `K%.x`, `Pitcher_Handedness.R` = `Pitcher Handedness.y`, 
+         PA.R = PA.y, wOBA.R = wOBA.y, OPS.R = OPS.y, `GB%.R` = `GB%.y`,
+         `LD%.R` = `LD%.y`, `Hard%.R` = `Hard%.y`, `BB%.R` = `BB%.y`, 
+         `K%.R` = `K%.y`)
+set.seed(111)
+
+LHH.split = sample.split(LHH_splits$wOBA.L, SplitRatio = 0.8)
+LHH.train = LHH_splits %>% filter(split == TRUE)
+LHH.test = LHH_splits %>% filter(split == FALSE)
+
+LHH.rf <- randomForest(wOBA.L ~ wOBA.R + OPS.R + LHH_splits$`GB%.R` + 
+                         LHH_splits$`LD%.R` + LHH_splits$`Hard%.R` + LHH_splits$`BB%.R` + 
+                         LHH_splits$`K%.R`, data = LHH_splits, importance = TRUE)
+pred1 <- predict(LHH.rf, newdata = RHH_splits, type = 'response')
