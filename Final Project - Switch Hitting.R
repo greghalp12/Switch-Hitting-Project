@@ -256,13 +256,38 @@ RHH_splits <- RHH_splits %>%
          PA.R = PA.y, wOBA.R = wOBA.y, OPS.R = OPS.y, `GB%.R` = `GB%.y`,
          `LD%.R` = `LD%.y`, `Hard%.R` = `Hard%.y`, `BB%.R` = `BB%.y`, 
          `K%.R` = `K%.y`)
+
+
+#LHH.split = sample.split(LHH_splits$wOBA.L, SplitRatio = 0.8)
+#LHH.train = LHH_splits %>% filter(split == TRUE)
+#LHH.test = LHH_splits %>% filter(split == FALSE)
+
+#LHH.rf <- randomForest(wOBA.L ~ wOBA.R + OPS.R + LHH_splits$`GB%.R` + 
+#                         LHH_splits$`LD%.R` + LHH_splits$`Hard%.R` + LHH_splits$`BB%.R` + 
+#                         LHH_splits$`K%.R`, data = LHH_splits, importance = TRUE)
+#pred1 <- predict(LHH.rf, newdata = RHH_splits, type = 'response')
+
+library(caret)
 set.seed(111)
 
-LHH.split = sample.split(LHH_splits$wOBA.L, SplitRatio = 0.8)
-LHH.train = LHH_splits %>% filter(split == TRUE)
-LHH.test = LHH_splits %>% filter(split == FALSE)
+LHH.index <- sample(2, nrow(LHH_splits), replace = TRUE, prob = c(0.8, 0.2))
+LHH.train <- LHH_splits[LHH.index==1,]
+LHH.test <- LHH_splits[LHH.index==2, ]
+LHH.rf <- randomForest(wOBA.L ~ wOBA.R + OPS.R + LHH.train$`GB%.R` + 
+                         LHH.train$`LD%.R` + LHH.train$`Hard%.R` + LHH.train$`BB%.R` + 
+                         LHH.train$`K%.R`, data = LHH.train, importance = TRUE)
+print(LHH.rf)
 
-LHH.rf <- randomForest(wOBA.L ~ wOBA.R + OPS.R + LHH_splits$`GB%.R` + 
-                         LHH_splits$`LD%.R` + LHH_splits$`Hard%.R` + LHH_splits$`BB%.R` + 
-                         LHH_splits$`K%.R`, data = LHH_splits, importance = TRUE)
-pred1 <- predict(LHH.rf, newdata = RHH_splits, type = 'response')
+set.seed(111)
+RHH.index <- sample(2, nrow(RHH_splits), replace = TRUE, prob = c(0.8, 0.2))
+RHH.train <- RHH_splits[RHH.index==1,]
+RHH.test <- RHH_splits[RHH.index==2, ]
+RHH.rf <- randomForest(wOBA.R ~ wOBA.L + OPS.L + RHH.train$`GB%.R` + 
+                         RHH.train$`LD%.R` + RHH.train$`Hard%.R` + RHH.train$`BB%.R` + 
+                         RHH.train$`K%.R`, data = RHH.train, importance = TRUE)
+print(RHH.rf)
+
+pred1 <- predict(LHH.rf, data = SH_filt$wOBA.R)
+print(pred1)
+pred2 <- predict(RHH.rf, data = SH_filt$wOBA.L)
+print(pred2)
