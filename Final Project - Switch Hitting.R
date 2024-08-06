@@ -19,6 +19,7 @@ library(gridExtra)
 library(plotly)
 library(randomForest)
 library(caTools)
+library(janitor)
 
 #Load data sets
 League_vs_LHP <- read_excel("2018-2023 League vs LHP.xlsx")
@@ -225,9 +226,9 @@ RHH_splits <- inner_join(RHH_vs_LHP, RHH_vs_RHP, by = 'PlayerId')
 
 #Filter each splits table
 LHH_splits <- LHH_splits %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
-                             OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
-                             `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
-                             `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
+                                    OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
+                                    `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
+                                    `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
 RHH_splits <- RHH_splits %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
                                     OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
                                     `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
@@ -257,37 +258,46 @@ RHH_splits <- RHH_splits %>%
          `LD%.R` = `LD%.y`, `Hard%.R` = `Hard%.y`, `BB%.R` = `BB%.y`, 
          `K%.R` = `K%.y`)
 
-
-#LHH.split = sample.split(LHH_splits$wOBA.L, SplitRatio = 0.8)
-#LHH.train = LHH_splits %>% filter(split == TRUE)
-#LHH.test = LHH_splits %>% filter(split == FALSE)
-
-#LHH.rf <- randomForest(wOBA.L ~ wOBA.R + OPS.R + LHH_splits$`GB%.R` + 
-#                         LHH_splits$`LD%.R` + LHH_splits$`Hard%.R` + LHH_splits$`BB%.R` + 
-#                         LHH_splits$`K%.R`, data = LHH_splits, importance = TRUE)
-#pred1 <- predict(LHH.rf, newdata = RHH_splits, type = 'response')
-
-library(caret)
+#Creating the model
 set.seed(111)
 
+#Cleaning the data frame variables so it can be read by randomForest
+SH_filt <- clean_names(SH_filt)
+LHH_splits <- clean_names(LHH_splits)
+RHH_splits <-clean_names(RHH_splits)
+
+SH_filt <- SH_filt %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l, 
+                                   ld_r = ld_percent_r, ld_l = ld_percent_l,
+                                   hard_r = hard_percent_r, hard_l = hard_percent_l,
+                                   bb_r = bb_percent_r, bb_l = bb_percent_l,
+                                   k_r = k_percent_r, k_l = k_percent_l)
+
+#Splitting the LHH_splits data set into training and testing data
 LHH.index <- sample(2, nrow(LHH_splits), replace = TRUE, prob = c(0.8, 0.2))
 LHH.train <- LHH_splits[LHH.index==1,]
 LHH.test <- LHH_splits[LHH.index==2, ]
-LHH.rf <- randomForest(wOBA.L ~ wOBA.R + OPS.R + LHH.train$`GB%.R` + 
-                         LHH.train$`LD%.R` + LHH.train$`Hard%.R` + LHH.train$`BB%.R` + 
-                         LHH.train$`K%.R`, data = LHH.train, importance = TRUE)
+
+#Creating random forest for predicting woba against LHP using information against RHP for LHH
+LHH.rf <- randomForest(w_oba_l ~ w_oba_r + ops_r + gb_r + ld_r + hard_r + bb_r + k_r, 
+                       data = LHH.train, importance = TRUE)
 print(LHH.rf)
 
-set.seed(111)
+#Splitting the RHH_splits data set into training and testing data
 RHH.index <- sample(2, nrow(RHH_splits), replace = TRUE, prob = c(0.8, 0.2))
 RHH.train <- RHH_splits[RHH.index==1,]
 RHH.test <- RHH_splits[RHH.index==2, ]
-RHH.rf <- randomForest(wOBA.R ~ wOBA.L + OPS.L + RHH.train$`GB%.R` + 
-                         RHH.train$`LD%.R` + RHH.train$`Hard%.R` + RHH.train$`BB%.R` + 
-                         RHH.train$`K%.R`, data = RHH.train, importance = TRUE)
+
+#Creating ranomd forest for RHH against RHP using information against LHP
+RHH.rf <- randomForest(w_oba_r ~ w_oba_l + ops_l + gb_l + ld_l + hard_l + bb_l + k_l, 
+                       data = RHH.train, importance = TRUE)
 print(RHH.rf)
 
-pred1 <- predict(LHH.rf, data = SH_filt$wOBA.R)
-print(pred1)
-pred2 <- predict(RHH.rf, data = SH_filt$wOBA.L)
-print(pred2)
+#Making predictions for Switch hitters only hitting lefty against LHP
+pred_l <- predict(LHH.rf, newdata = SH_filt)
+print(pred_l)
+
+#Making predictions for Switch hitters only hitting righty against RHP
+pred_r <- predict(RHH.rf, newdata = SH_filt)
+print(pred_r)
+
+
