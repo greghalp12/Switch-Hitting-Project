@@ -20,6 +20,8 @@ library(plotly)
 library(randomForest)
 library(caTools)
 library(janitor)
+library(Metrics)
+
 
 #Load data sets
 League_vs_LHP <- read_excel("2018-2023 League vs LHP.xlsx")
@@ -136,7 +138,7 @@ hit_metrics$Color_OPS[hit_metrics$OPS.R > 0.731 & hit_metrics$OPS.L < 0.736] = "
 hit_metrics$Color_OPS[hit_metrics$OPS.R < 0.731 & hit_metrics$OPS.L > 0.736] = "darkgoldenrod1"
 
 #Scatterplot of EDA on OPS 
-ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
+EDA_OPS <- ggplot(data = hit_metrics, aes(x = OPS.R, y = OPS.L)) +
   annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, fill = "white") +
   geom_vline(xintercept = 0.731) +
   geom_hline(yintercept = 0.736) +
@@ -271,6 +273,16 @@ SH_filt <- SH_filt %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l,
                                    hard_r = hard_percent_r, hard_l = hard_percent_l,
                                    bb_r = bb_percent_r, bb_l = bb_percent_l,
                                    k_r = k_percent_r, k_l = k_percent_l)
+LHH_splits <- LHH_splits %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l, 
+                              ld_r = ld_percent_r, ld_l = ld_percent_l,
+                              hard_r = hard_percent_r, hard_l = hard_percent_l,
+                              bb_r = bb_percent_r, bb_l = bb_percent_l,
+                              k_r = k_percent_r, k_l = k_percent_l)
+RHH_splits <- RHH_splits %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l, 
+                              ld_r = ld_percent_r, ld_l = ld_percent_l,
+                              hard_r = hard_percent_r, hard_l = hard_percent_l,
+                              bb_r = bb_percent_r, bb_l = bb_percent_l,
+                              k_r = k_percent_r, k_l = k_percent_l)
 
 #Splitting the LHH_splits data set into training and testing data
 LHH.index <- sample(2, nrow(LHH_splits), replace = TRUE, prob = c(0.8, 0.2))
@@ -278,7 +290,7 @@ LHH.train <- LHH_splits[LHH.index==1,]
 LHH.test <- LHH_splits[LHH.index==2, ]
 
 #Creating random forest for predicting woba against LHP using information against RHP for LHH
-LHH.rf <- randomForest(w_oba_l ~ w_oba_r + ops_r + gb_r + ld_r + hard_r + bb_r + k_r, 
+LHH.rf <- randomForest(ops_l ~ w_oba_r + ops_r + gb_r + ld_r + hard_r + bb_r + k_r, 
                        data = LHH.train, importance = TRUE)
 print(LHH.rf)
 
@@ -288,9 +300,10 @@ RHH.train <- RHH_splits[RHH.index==1,]
 RHH.test <- RHH_splits[RHH.index==2, ]
 
 #Creating ranomd forest for RHH against RHP using information against LHP
-RHH.rf <- randomForest(w_oba_r ~ w_oba_l + ops_l + gb_l + ld_l + hard_l + bb_l + k_l, 
+RHH.rf <- randomForest(ops_r ~ w_oba_l + ops_l + gb_l + ld_l + hard_l + bb_l + k_l, 
                        data = RHH.train, importance = TRUE)
 print(RHH.rf)
+
 
 #Making predictions for Switch hitters only hitting lefty against LHP
 pred_l <- predict(LHH.rf, newdata = SH_filt)
@@ -300,12 +313,31 @@ print(pred_l)
 pred_r <- predict(RHH.rf, newdata = SH_filt)
 print(pred_r)
 
-SH_filt$pred_l <- pred_l
-SH_filt$pred_r <- pred_r
+#Add the predicted OPS' to SH_filt dataframe
+SH_filt$pred_l_ops <- pred_l
+SH_filt$pred_r_ops <- pred_r
 
-ggplot(data = SH_filt, aes(x = w_oba_l, pred_l)) +
-  geom_point()
+#Plot Switch hitters real OPS against left pitchers against our model's predicted 
+# OPS if they decided to only hit left-handed
 
+ggplot(data = SH_filt, aes(x = ops_l, pred_l_ops)) +
+  geom_point() +
+  coord_fixed(1) +
+  geom_text_repel(data = SH_filt, 
+                  aes(label=name), cex = 2.75, hjust=0, vjust=0) +
+  geom_abline(intercept = 0, slope = 1)
+
+#Plot Switch hitters real OPS against right-handed pitchers against 
+# our model's predicted OPS if they decided to only hit right-handed
+
+ggplot(data = SH_filt, aes(x = ops_r, pred_r_ops)) +
+  geom_point() +
+  coord_fixed(1) +
+  geom_text_repel(data = SH_filt, 
+                  aes(label=name), cex = 2.75, hjust=0, vjust=0)+
+  geom_abline(intercept = 0, slope = 1)
+
+  
 
 #Comparing to Mullins
 Mullins_LHH_2020 <- read_csv("2018-2020 Cedric Mullins vs RHP as LHH.csv")
