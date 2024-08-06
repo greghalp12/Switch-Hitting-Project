@@ -300,4 +300,36 @@ print(pred_l)
 pred_r <- predict(RHH.rf, newdata = SH_filt)
 print(pred_r)
 
+SH_filt$pred_l <- pred_l
+SH_filt$pred_r <- pred_r
+
+ggplot(data = SH_filt, aes(x = w_oba_l, pred_l)) +
+  geom_point()
+
+
+#Comparing to Mullins
+Mullins_LHH_2020 <- read_csv("2018-2020 Cedric Mullins vs RHP as LHH.csv")
+Mullins_RHH_2020 <- read_csv("2018-2020 Cedric Mullins vs LHP as RHH.csv")
+Mullins_LHH_RHP_2023 <-read_csv("2021-2023 Cedric Mullins vs LHP as LHH.csv")
+Mullins_LHH_LHP_2023 <- read_csv("2021-2023 Cedric Mullins vs RHP as LHH.csv")
+
+#Filter each Mullins table
+Mullins_LHH_2020 <- Mullins_LHH_2020 %>% select(Name, PlayerId, `Pitcher Handedness`,PA, wOBA, 
+                                                OPS, `GB%`, `LD%`, `Hard%`, `BB%`, `K%`)
+Mullins_RHH_2020 <- Mullins_RHH_2020 %>% select(Name, PlayerId, `Pitcher Handedness`,PA, wOBA, 
+                                                OPS, `GB%`, `LD%`, `Hard%`, `BB%`, `K%`)
+Mullins_LHH_RHP_2023 <- Mullins_LHH_RHP_2023 %>% select(Name, PlayerId, `Pitcher Handedness`,PA, wOBA, 
+                                                        OPS, `GB%`, `LD%`, `Hard%`, `BB%`, `K%`)
+Mullins_LHH_LHP_2023 <- Mullins_LHH_LHP_2023 %>% select(Name, PlayerId, `Pitcher Handedness`,PA, wOBA, 
+                                                        OPS, `GB%`, `LD%`, `Hard%`, `BB%`, `K%`)
+
+#Rounding all Mullins numeric values to 3 decimal places
+Mullins_LHH_2020 <- Mullins_LHH_2020 %>% 
+  mutate_if(is.numeric, round,3)
+Mullins_RHH_2020 <- Mullins_RHH_2020 %>%
+  mutate_if(is.numeric, round,3)
+Mullins_LHH_RHP_2023<- Mullins_LHH_RHP_2023 %>%
+  mutate_if(is.numeric, round,3)
+Mullins_LHH_LHP_2023 <- Mullins_LHH_LHP_2023 %>%
+  mutate_if(is.numeric, round,3)
 
