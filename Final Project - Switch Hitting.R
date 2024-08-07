@@ -317,29 +317,45 @@ print(pred_r)
 SH_filt$pred_l_ops <- pred_l
 SH_filt$pred_r_ops <- pred_r
 
+#margin of error r_ops
+n_ops_r <- length(SH_filt$pred_r_ops)
+sd_ops_r <- sd(SH_filt$pred_r_ops)
+ops_r_mean <- mean(SH_filt$pred_r_ops)
+marginerror_ops_r <- qnorm(0.975)*sd_ops_r/sqrt(n_ops_r)
+
+# Set new column values to appropriate colors for l_ops
+SH_filt$Color_l_ops[SH_filt$ops_l < SH_filt$pred_l_ops]="green"
+SH_filt$Color_l_ops[SH_filt$ops_l > SH_filt$pred_l_ops]="red"
+SH_filt$Color_l_ops[SH_filt$ops_l < 0.7 & SH_filt$pred_l_ops > 0.675]="darkgoldenrod1"
+
 #Plot Switch hitters real OPS against left pitchers against our model's predicted 
 # OPS if they decided to only hit left-handed
 
 ggplot(data = SH_filt, aes(x = ops_l, pred_l_ops)) +
-  geom_point() +
+  geom_point(color = SH_filt$Color_l_ops) +
   coord_fixed(1) +
   geom_text_repel(data = SH_filt, 
-                  aes(label=name), cex = 2.75, hjust=0, vjust=0) +
+                  aes(label=name), cex = 2.6, hjust=0.3, vjust=0) +
   geom_abline(intercept = 0, slope = 1)
+
+# Set new column values to appropriate colors for r_ops
+SH_filt$Color_r_ops[SH_filt$ops_r < SH_filt$pred_r_ops]="green"
+SH_filt$Color_r_ops[SH_filt$ops_r > SH_filt$pred_r_ops]="red"
+SH_filt$Color_r_ops[SH_filt$ops_r < 0.75 & SH_filt$pred_r_ops > 0.7 & SH_filt$pred_r_ops < 0.75]="darkgoldenrod1"
 
 #Plot Switch hitters real OPS against right-handed pitchers against 
 # our model's predicted OPS if they decided to only hit right-handed
 
 ggplot(data = SH_filt, aes(x = ops_r, pred_r_ops)) +
-  geom_point() +
+  geom_point(color = SH_filt$Color_r_ops) +
   coord_fixed(1) +
   geom_text_repel(data = SH_filt, 
-                  aes(label=name), cex = 2.75, hjust=0, vjust=0)+
+                  aes(label=name), cex = 2.6, hjust=0.3, vjust=0)+
   geom_abline(intercept = 0, slope = 1)
 
-  
 
-#Comparing to Mullins
+
+#Loading Cedric Mullins data
 Mullins_LHH_2020 <- read_csv("2018-2020 Cedric Mullins vs RHP as LHH.csv")
 Mullins_RHH_2020 <- read_csv("2018-2020 Cedric Mullins vs LHP as RHH.csv")
 Mullins_LHH_RHP_2023 <-read_csv("2021-2023 Cedric Mullins vs LHP as LHH.csv")
