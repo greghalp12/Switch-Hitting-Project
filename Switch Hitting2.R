@@ -16,11 +16,13 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 library(gridExtra)
-library(plotly)
 library(randomForest)
 library(caTools)
 library(janitor)
 library(Metrics)
+library(ztable)
+library(magrittr)
+library(condformat)
 
 #Load data sets left-handed hitters, right-handed hitters, switch-hitters, and Cedric Mullins pre vs post-switch
 LHH_vs_LHP <- read_csv("2018-2023 LHH vs LHP - min200.csv")
@@ -288,6 +290,53 @@ print(pred_r)
 #Add the predicted OPS' to SH_filt dataframe
 SH_filt$pred_ops_l <- pred_l
 SH_filt$pred_ops_r <- pred_r
+
+#Filtering Switch-Hitter data frame to display actual vs predicted OPS
+SH_filt2 <- SH_filt %>% select(name, player_id, ops_l, pred_ops_l, ops_r, pred_ops_r)
+
+#Creating conditional table to display results
+options(ztable.type = "html")
+SH_filt_pred = ztable(SH_filt2)
+SH_filt_pred <- as.data.frame(SH_filt_pred)
+SH_filt_pred %>% 
+  makeHeatmap()
+ print(caption = "Heatmap of OPS vs OPS predictions")
+ 
+SH_filt2 <- as.data.frame(SH_filt2)
+ color.picker <- function(z){
+   if(is.na(z)){return(0)}
+   else if(z <= 20){return(1)}
+   else if( z > 20 & z <= 80){return(2)}
+   else {return(3)}
+ }
+ condformat(SH_filt2) +
+   rule_fill_gradient(SH_filt2$ops_l, low = rgb(1,1,1), high = rgb(0,1,0)) +
+   rule_fill_gradient(SH_filt2$pred_ops_l, low = rgb(1,1,1), high = rgb(1,0,0)) +
+   rule_fill_gradient(SH_filt2$ops_r, low = rgb(1,1,1), high = rgb(1,0,0)) +
+   rule_fill_discrete(SH_filt2$pred_ops_r, expression = sapply(Cosigned,
+                                                    color.picker),colours=c("0" = "white", "1" = "red", 
+  
+                                                                            
+                                                                                                                                                   "2" =  "yellow", "3" = "lightgreen"))
+image(SH_filt2$ops_l, SH_filt2$pred_ops_l, t(SH_filt2),
+      col = c(rgb(0,0,1,0.3),rgb(1,0,0,0.3), rgb(1,1,0,0.3)),
+      breaks = c(0, 25, 50, 100),
+      xaxt = 'n', 
+      yaxt = 'n', 
+      xlab = '', 
+      ylab = '',
+      ylim = c(max(y) + 0.5, min(y) - 0.5)
+)
+ 
+value <- SH_filt2$ops_l - SH_filt2$pred_ops_l
+testplot <- SH_filt2 %>%
+  ggplot(aes(x = ops_l, y = pred_ops_l, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label= round(value, 3))) + 
+  scale_fill_gradient2("OPS", low = "grey10", high = "blue", mid = "white", midpoint = 0.7)
+#  labs(title = "Predicted OPS Hitting Lefty vs Actual OPS Hitting Righty vs Left-Handed Pitcher", x = "OPS as switch-hitter", y = "Predicted OPS hitting lefty") +
+#  theme(plot.title=element_text(hjust=0.4, size = 15))
+testplot
 
 #Add a new column 'Color' with default value 'black' for ops_l
 SH_filt$Color_ops_l <- "black"
