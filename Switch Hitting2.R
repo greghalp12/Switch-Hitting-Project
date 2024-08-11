@@ -20,11 +20,11 @@ library(randomForest)
 library(caTools)
 library(janitor)
 library(Metrics)
-library(ztable)
-library(magrittr)
-library(condformat)
+library(knitr)
+library(kableExtra)
+library(htmltools)
 
-#Load data sets left-handed hitters, right-handed hitters, switch-hitters, and Cedric Mullins pre vs post-switch
+#Load data sets 
 LHH_vs_LHP <- read_csv("2018-2023 LHH vs LHP - min200.csv")
 LHH_vs_RHP <- read_csv("2018-2023 LHH vs RHP - min500.csv")
 RHH_vs_LHP <- read_csv("2018-2023 RHH vs LHP - min250.csv")
@@ -56,7 +56,7 @@ LHH_splits <- LHH_splits %>%
 RHH_splits <- RHH_splits %>% 
   mutate_if(is.numeric, round,3)
 
-#Adjusting LHH and RHH splits variable names to .L / .R
+#Adjusting variable names to .L / .R to identify pitcher handedness
 LHH_splits <- LHH_splits %>%
   rename(Name = Name.x, `Pitcher_Handedness.L` = `Pitcher Handedness.x`,
          PA.L = PA.x, wOBA.L = wOBA.x, OPS.L = OPS.x, `GB%.L` = `GB%.x`, 
@@ -91,6 +91,7 @@ RHH_splits <- RHH_splits %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l,
                                     k_r = k_percent_r, k_l = k_percent_l)
 
 #Calculating rounded means of LHH and RHH splits variables vs same handed pitcher
+# Used in EDA Plots
 LHH_w_oba_mean <- round(mean(LHH_splits$w_oba_l), 3)
 LHH_ops_mean <- round(mean(LHH_splits$ops_l), 3)
 LHH_gb_mean <- round(mean(LHH_splits$gb_l), 3)
@@ -111,15 +112,15 @@ SH_full <- left_join(SH_vs_LHP,SH_vs_RHP, by = 'PlayerId')
 
 #Filtering Switch hitting variables
 SH_filt <- SH_full %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
-                             OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
-                             `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
-                             `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
+                              OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
+                              `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
+                              `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
 
 #Rounding all numeric values to 3 decimal places
 SH_filt <- SH_filt %>% 
   mutate_if(is.numeric, round,3)
 
-#Adjusting switch-hitter filtered variable names to .L / .R
+#Adjusting variable names to .L / .R to identify opposing pitcher handedness
 SH_filt <- SH_filt %>%
   rename(Name = Name.x, `Pitcher_Handedness.L` = `Pitcher Handedness.x`,
          PA.L = PA.x, wOBA.L = wOBA.x, OPS.L = OPS.x, `GB%.L` = `GB%.x`, 
@@ -140,58 +141,59 @@ SH_filt <- SH_filt %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l,
                               k_r = k_percent_r, k_l = k_percent_l)
 
 #Add a new columns 'Color' with default value 'black'
-SH_filt$Color_w_oba_b <- "black"
-SH_filt$Color_ops_b <- "black"
-SH_filt$Color_gb_b <- "black"
-SH_filt$Color_ld_b <- "black"
-SH_filt$Color_hard_b <- "black"
-SH_filt$Color_bb_b <- "black"
-SH_filt$Color_k_b <- "black"
+SH_filt$Perf_w_oba <- "black"
+SH_filt$Perf_ops <- "black"
+SH_filt$Perf_gb <- "black"
+SH_filt$Perf_ld <- "black"
+SH_filt$Perf_hard <- "black"
+SH_filt$Perf_bb <- "black"
+SH_filt$Perf_k <- "black"
 
-#Set new column values to appropriate colors for LHH vs RHH splits. Reversing comparison for GB and K
-SH_filt$Color_w_oba_b[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "green"
-SH_filt$Color_w_oba_b[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r < RHH_w_oba_mean] = "red"
-SH_filt$Color_w_oba_b[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r < RHH_w_oba_mean] = "goldenrod2"
-SH_filt$Color_w_oba_b[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "goldenrod2"
-SH_filt$Color_ops_b[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "green"
-SH_filt$Color_ops_b[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "red"
-SH_filt$Color_ops_b[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "goldenrod2"
-SH_filt$Color_ops_b[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "goldenrod2"
-SH_filt$Color_gb_b[SH_filt$gb_l < LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "green"
-SH_filt$Color_gb_b[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r > RHH_gb_mean] = "red"
-SH_filt$Color_gb_b[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "goldenrod2"
-SH_filt$Color_gb_b[SH_filt$gb_l < LHH_gb_mean & SH_filt$gb_r > RHH_gb_mean] = "goldenrod2"
-SH_filt$Color_ld_b[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "green"
-SH_filt$Color_ld_b[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "red"
-SH_filt$Color_ld_b[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "goldenrod2"
-SH_filt$Color_ld_b[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "goldenrod2"
-SH_filt$Color_hard_b[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "green"
-SH_filt$Color_hard_b[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "red"
-SH_filt$Color_hard_b[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "goldenrod2"
-SH_filt$Color_hard_b[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "goldenrod2"
-SH_filt$Color_bb_b[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "green"
-SH_filt$Color_bb_b[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "red"
-SH_filt$Color_bb_b[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "goldenrod2"
-SH_filt$Color_bb_b[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "goldenrod2"
-SH_filt$Color_k_b[SH_filt$k_l < LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "green"
-SH_filt$Color_k_b[SH_filt$k_l > LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "red"
-SH_filt$Color_k_b[SH_filt$k_l > LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "goldenrod2"
-SH_filt$Color_k_b[SH_filt$k_l < LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "goldenrod2"
 
-manual_colors <- c("A" = "green", "B" = "goldenrod2")
-manual_labels <- c("A" = "Better", "B" = "Better one-side")
+############
+#Set new column values to appropriate Perfs for LHH vs RHH splits. Reversing comparison for GB and K
+SH_filt$Perf_w_oba[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "Both +"
+SH_filt$Perf_w_oba[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r < RHH_w_oba_mean] = "Both -"
+SH_filt$Perf_w_oba[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r < RHH_w_oba_mean] = "+ Left, - Right"
+SH_filt$Perf_w_oba[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "+ Right, - Left"
+SH_filt$Perf_ops[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "Both +"
+SH_filt$Perf_ops[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "Both -"
+SH_filt$Perf_ops[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "goldenrod2"
+SH_filt$Perf_ops[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "goldenrod2"
+SH_filt$Perf_gb[SH_filt$gb_l < LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "Both +"
+SH_filt$Perf_gb[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r > RHH_gb_mean] = "Both -"
+SH_filt$Perf_gb[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "+ Right, - Left"
+SH_filt$Perf_gb[SH_filt$gb_l < LHH_gb_mean & SH_filt$gb_r > RHH_gb_mean] = "+ Left, - Right"
+SH_filt$Perf_ld[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "Both +"
+SH_filt$Perf_ld[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "Both -"
+SH_filt$Perf_ld[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "goldenrod2"
+SH_filt$Perf_ld[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "goldenrod2"
+SH_filt$Perf_hard[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "Both +"
+SH_filt$Perf_hard[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "Both -"
+SH_filt$Perf_hard[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "goldenrod2"
+SH_filt$Perf_hard[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "goldenrod2"
+SH_filt$Perf_bb[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "Both +"
+SH_filt$Perf_bb[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "Both -"
+SH_filt$Perf_bb[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "goldenrod2"
+SH_filt$Perf_bb[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "goldenrod2"
+SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "Both +"
+SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "Both -"
+SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "goldenrod2"
+SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "goldenrod2"
+
+#################
+
 #EDA scatterplot for wOBA
-EDA_wOBA <- ggplot(data = SH_filt, aes(x = w_oba_r, y = w_oba_l)) +
+EDA_wOBA <- ggplot(data = SH_filt, aes(x = w_oba_r, y = w_oba_l, color = Perf_w_oba)) +
   geom_vline(xintercept = RHH_w_oba_mean) +
   geom_hline(yintercept = LHH_w_oba_mean) +
-  geom_point(color = SH_filt$Color_w_oba_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Weighted On-Base Average: Left vs Right-Handed Pitcher", x = "wOBA vs R", y = "wOBA vs L") +
-  theme(plot.title=element_text(hjust=0.4, size = 15)) +
-  scale_color_manual(values = manual_colors, labels = manual_labels)
+  labs(title = "wOBA Splits Compared to Same-Sided League Averages", x = "wOBA vs R", y = "wOBA vs L",
+       color = "Performance vs league average") +
+  theme(plot.title=element_text(hjust=0.4, size = 15))
 
-EDA_wOBA
-
+#############################
 #EDA scatterplot for OPS
 EDA_OPS <- ggplot(data = SH_filt, aes(x = ops_r, y = ops_l)) +
   geom_vline(xintercept = RHH_ops_mean) +
@@ -203,14 +205,15 @@ EDA_OPS <- ggplot(data = SH_filt, aes(x = ops_r, y = ops_l)) +
 EDA_OPS
 
 #EDA scatterplot for GB%
-EDA_GB <- ggplot(data = SH_filt, aes(x = gb_r, y = gb_l)) +
+EDA_GB <- ggplot(data = SH_filt, aes(x = gb_r, y = gb_l, color = Perf_gb)) +
   geom_vline(xintercept = RHH_gb_mean) +
   geom_hline(yintercept = LHH_gb_mean) +
   scale_x_reverse() +
   scale_y_reverse() +
-  geom_point(color = SH_filt$Color_gb_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Groundball%: Left vs Right-Handed Pitcher", x = "GB vs R", y = "GB vs L") +
+  labs(title = "Ground Ball% Splits Compared to Same-Sided League Averages", x = "GB% vs R", y = "GB% vs L",
+       color = "Performance vs league average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
 EDA_GB
 
@@ -256,6 +259,8 @@ EDA_K <- ggplot(data = SH_filt, aes(x = k_r, y = k_l)) +
   theme(plot.title=element_text(hjust=0.4, size = 15))
 EDA_K
 
+###########
+
 #Creating the model
 set.seed(111)
 
@@ -288,55 +293,45 @@ pred_r <- predict(RHH.rf, newdata = SH_filt)
 print(pred_r)
 
 #Add the predicted OPS' to SH_filt dataframe
-SH_filt$pred_ops_l <- pred_l
-SH_filt$pred_ops_r <- pred_r
+SH_filt$pred_ops_l <- round(pred_l,3)
+SH_filt$pred_ops_r <- round(pred_r,3)
 
 #Filtering Switch-Hitter data frame to display actual vs predicted OPS
 SH_filt2 <- SH_filt %>% select(name, player_id, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
 #Creating conditional table to display results
-options(ztable.type = "html")
-SH_filt_pred = ztable(SH_filt2)
-SH_filt_pred <- as.data.frame(SH_filt_pred)
-SH_filt_pred %>% 
-  makeHeatmap()
- print(caption = "Heatmap of OPS vs OPS predictions")
- 
-SH_filt2 <- as.data.frame(SH_filt2)
- color.picker <- function(z){
-   if(is.na(z)){return(0)}
-   else if(z <= 20){return(1)}
-   else if( z > 20 & z <= 80){return(2)}
-   else {return(3)}
- }
- condformat(SH_filt2) +
-   rule_fill_gradient(SH_filt2$ops_l, low = rgb(1,1,1), high = rgb(0,1,0)) +
-   rule_fill_gradient(SH_filt2$pred_ops_l, low = rgb(1,1,1), high = rgb(1,0,0)) +
-   rule_fill_gradient(SH_filt2$ops_r, low = rgb(1,1,1), high = rgb(1,0,0)) +
-   rule_fill_discrete(SH_filt2$pred_ops_r, expression = sapply(Cosigned,
-                                                    color.picker),colours=c("0" = "white", "1" = "red", 
-  
-                                                                            
-                                                                                                                                                   "2" =  "yellow", "3" = "lightgreen"))
-image(SH_filt2$ops_l, SH_filt2$pred_ops_l, t(SH_filt2),
-      col = c(rgb(0,0,1,0.3),rgb(1,0,0,0.3), rgb(1,1,0,0.3)),
-      breaks = c(0, 25, 50, 100),
-      xaxt = 'n', 
-      yaxt = 'n', 
-      xlab = '', 
-      ylab = '',
-      ylim = c(max(y) + 0.5, min(y) - 0.5)
-)
- 
-value <- SH_filt2$ops_l - SH_filt2$pred_ops_l
-testplot <- SH_filt2 %>%
-  ggplot(aes(x = ops_l, y = pred_ops_l, fill = value)) +
-  geom_tile() +
-  geom_text(aes(label= round(value, 3))) + 
-  scale_fill_gradient2("OPS", low = "grey10", high = "blue", mid = "white", midpoint = 0.7)
-#  labs(title = "Predicted OPS Hitting Lefty vs Actual OPS Hitting Righty vs Left-Handed Pitcher", x = "OPS as switch-hitter", y = "Predicted OPS hitting lefty") +
-#  theme(plot.title=element_text(hjust=0.4, size = 15))
-testplot
+
+kable(SH_filt2, caption = "Switch Hitter") %>%
+  kable_styling() %>%
+  # Apply conditional formatting to the 'Wins' column
+  column_spec(1, background = spec_color(SH_filt2$pred_ops_l, option = "C"), color = "white") %>%
+  # Apply conditional formatting to rows based on 'Wins'
+  column_spec(which(SH_filt2$pred_ops_l > SH_filt2$ops_l), background = "lightgreen") %>%
+  column_spec(which(SH_filt2$pred_ops_l <= SH_filt2$ops_l), background = "lightcoral")
+
+kable(SH_filt2[, c("name", "player_id", "ops_l", "pred_ops_l", "ops_r", 
+                   "pred_ops_r", "pred_ops_l_col")],
+      escape = FALSE,
+      caption = "Conditional Formatting for Specific Cells") %>%
+  kable_styling()
+
+SH_filt2$pred_ops_l_col <- ifelse(SH_filt2$pred_ops_l > SH_filt2$ops_l, 
+                            cell_spec(SH_filt2$pred_ops_l, background = "lightgreen", color = "black",
+                                      escape = FALSE),
+                            cell_spec(SH_filt2$pred_ops_l, background = "lightcoral", color = "black",
+                                      escape = FALSE))
+
+data$Wins_colored <- ifelse(data$Wins > 0.7, 
+                            cell_spec(data$Wins, 
+                                      background = "lightgreen", 
+                                      color = "black",
+                                      escape = FALSE),
+                            cell_spec(data$Wins, 
+                                      background = "lightcoral", 
+                                      color = "black",
+                                      escape = FALSE))
+
+
 
 #Add a new column 'Color' with default value 'black' for ops_l
 SH_filt$Color_ops_l <- "black"
@@ -394,9 +389,9 @@ Mullins_2023<- Mullins_2023 %>%
 
 #Filtering Mullins data frame variables
 Mullins_2020<- Mullins_2020 %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
-                              OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
-                              `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
-                              `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
+                                       OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
+                                       `Pitcher Handedness.y`, PA.y, wOBA.y, OPS.y, `GB%.y`,
+                                       `LD%.y`, `Hard%.y`, `BB%.y`, `K%.y`)
 
 Mullins_2023<- Mullins_2023 %>% select(Name.x, PlayerId, `Pitcher Handedness.x`,PA.x, wOBA.x, 
                                        OPS.x, `GB%.x`, `LD%.x`, `Hard%.x`, `BB%.x`, `K%.x`,
@@ -428,10 +423,10 @@ Mullins_2023 <- clean_names(Mullins_2023)
 
 #renaming switch-hitter percent columns
 Mullins_2020 <- Mullins_2020 %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l, 
-                              ld_r = ld_percent_r, ld_l = ld_percent_l,
-                              hard_r = hard_percent_r, hard_l = hard_percent_l,
-                              bb_r = bb_percent_r, bb_l = bb_percent_l,
-                              k_r = k_percent_r, k_l = k_percent_l)
+                                        ld_r = ld_percent_r, ld_l = ld_percent_l,
+                                        hard_r = hard_percent_r, hard_l = hard_percent_l,
+                                        bb_r = bb_percent_r, bb_l = bb_percent_l,
+                                        k_r = k_percent_r, k_l = k_percent_l)
 
 Mullins_2023 <- Mullins_2023 %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l, 
                                         ld_r = ld_percent_r, ld_l = ld_percent_l,
