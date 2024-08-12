@@ -293,29 +293,56 @@ SH_filt$pred_ops_l <- round(pred_l,3)
 SH_filt$pred_ops_r <- round(pred_r,3)
 
 #Filtering Switch-Hitter data frame to display actual vs predicted OPS
-SH_filt2 <- SH_filt %>% select(name, player_id, ops_l, pred_ops_l, ops_r, pred_ops_r)
+SH_filt2 <- SH_filt %>% select(name, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
-SH_filt2$Switch <- "no"
+
+# Creating a variable that will decide whether a hitter should look to stop switch hitting
+SH_filt2$`Change?` <- case_when(SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse & 
+                               SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "Yes",
+                             SH_filt2$pred_ops_l < SH_filt2$ops_l - lhh_rmse & 
+                               SH_filt2$pred_ops_r > SH_filt2$ops_r + rhh_rmse ~ "Yes",
+                             SH_filt2$pred_ops_l < SH_filt2$ops_l - lhh_rmse &
+                               SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "No",
+                             SH_filt2$pred_ops_l < SH_filt2$ops_l - lhh_rmse &
+                               SH_filt2$pred_ops_r > SH_filt2$ops_r - rhh_rmse & 
+                               SH_filt2$pred_ops_r < SH_filt2$ops_r + rhh_rmse ~ "Maybe",
+                             SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse & 
+                               SH_filt2$pred_ops_l > SH_filt2$ops_l - lhh_rmse & 
+                               SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "Maybe")
+
 
 #Creating conditional table to display results
 
-SH_results <- kable(SH_filt2, caption = "Switch Hitter") %>%
+SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart", 
+                    col.names = c("Name", "Actual OPS v L",
+                                  "Predicted OPS v L", "Actual OPS v R",
+                                  "Predicted OPS v R", "Change?")) %>%
  kable_styling() %>%
-  # Apply conditional formatting to the 'Wins' column
-  column_spec(4, color = "white", bold = TRUE,
+#Applying conditions to the Predicted OPS v L column
+    column_spec(3, color = "white", bold = TRUE,
               background = case_when(
-                SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse ~ "green",
-                SH_filt2$pred_ops_l < SH_filt2$ops_l - rhh_rmse ~ "red",
+                SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse ~ "red",
+                SH_filt2$pred_ops_l < SH_filt2$ops_l - lhh_rmse ~ "green",
                 SH_filt2$pred_ops_l > SH_filt2$ops_l - lhh_rmse & 
-                  SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "goldenrod2"
+                  SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "goldenrod1"
               )) %>%
-  column_spec(6, color = "white", bold = TRUE,
+#Applying conditions to the Predicted OPS v R column
+  column_spec(5, color = "white", bold = TRUE,
             background = case_when(
-              SH_filt2$pred_ops_r > SH_filt2$ops_r + rhh_rmse ~ "green",
-              SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "red",
+              SH_filt2$pred_ops_r > SH_filt2$ops_r + rhh_rmse ~ "red",
+              SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "green",
               SH_filt2$pred_ops_r > SH_filt2$ops_r - rhh_rmse & 
-                SH_filt2$pred_ops_r < SH_filt2$ops_r + rhh_rmse~ "goldenrod2"
-            )) 
+                SH_filt2$pred_ops_r < SH_filt2$ops_r + rhh_rmse~ "goldenrod1"
+            ))  %>%
+#Applying conditions to the Change column
+  column_spec(6, bold = TRUE,
+              color = case_when(SH_filt2$`Change?` == "Yes" ~ "red",
+                                   SH_filt2$`Change?` == "No" ~ "black",
+                                   SH_filt2$`Change?` == "Maybe" ~ "goldenrod3"))
+
+
+
+SH_results
 
 
 #Filter each Mullins table
@@ -402,26 +429,49 @@ Mullins_2020$pred_ops_r <- pred_Mullins_r
 Mullins_full$pred_ops_l <- pred_Mullins_l
 Mullins_full$pred_ops_r <- pred_Mullins_r
 
+#Filtering the Actual OPS and Predicted OPS'
 Mullins_ops_pred <- Mullins_2020 %>%
   select(name, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
+#Creating the variable to decide whether a change should be
+Mullins_ops_pred$`Change?` <- case_when(Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l + lhh_rmse & 
+                                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "Yes",
+                                Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - lhh_rmse & 
+                                  Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r + rhh_rmse ~ "Yes",
+                                Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - lhh_rmse &
+                                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "No",
+                                Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - lhh_rmse &
+                                  Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r - rhh_rmse & 
+                                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse ~ "Maybe",
+                                Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse & 
+                                  Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l - lhh_rmse & 
+                                  Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse ~ "Maybe")
 
 
-Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins") %>%
+Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins",
+                         col.names = c("Name", "Actual OPS v L",
+                                       "Predicted OPS v L", "Actual OPS v R",
+                                       "Predicted OPS v R", "Change?")) %>%
   kable_styling() %>%
-  # Apply conditional formatting to the 'Wins' column
+# Apply conditional formatting to the Predicted OPS v L column
   column_spec(3, color = "white", bold = TRUE,
               background = case_when(
-                Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l + lhh_rmse ~ "green",
-                Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - rhh_rmse ~ "red",
+                Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l + lhh_rmse ~ "red",
+                Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - rhh_rmse ~ "green",
                 Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l - lhh_rmse & 
                   Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse~ "goldenrod2"
               )) %>%
+  # Apply conditional formatting to the Predicted OPS v R column
   column_spec(5, color = "white", bold = TRUE,
               background = case_when(
-                Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r + rhh_rmse ~ "green",
-                Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "red",
+                Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r + rhh_rmse ~ "red",
+                Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "green",
                 Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r - rhh_rmse & 
                   Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse~ "goldenrod2"
-              )) 
+              )) %>%
+# Apply conditional formatting to the Change column
+  column_spec(6, bold = TRUE,
+              color = case_when(Mullins_ops_pred$`Change?` == "Yes" ~ "red",
+                                Mullins_ops_pred$`Change?` == "No" ~ "black",
+                                Mullins_ops_pred$`Change?` == "Maybe" ~ "goldenrod3"))
 Mullins_results
