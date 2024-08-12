@@ -266,6 +266,8 @@ LHH.rf <- randomForest(ops_l ~ w_oba_r + ops_r + gb_r + ld_r + hard_r + bb_r + k
                        data = LHH.train, importance = TRUE)
 print(LHH.rf)
 
+lhh_rmse <- round(0.005468201, 3)
+
 #Splitting the RHH_splits data set into training and testing data
 RHH.index <- sample(2, nrow(RHH_splits), replace = TRUE, prob = c(0.8, 0.2))
 RHH.train <- RHH_splits[RHH.index==1,]
@@ -275,6 +277,8 @@ RHH.test <- RHH_splits[RHH.index==2, ]
 RHH.rf <- randomForest(ops_r ~ w_oba_l + ops_l + gb_l + ld_l + hard_l + bb_l + k_l, 
                        data = RHH.train, importance = TRUE)
 print(RHH.rf)
+
+rhh_rmse <- round(0.003724938, 3)
 
 #Making predictions for Switch hitters only hitting lefty against LHP
 pred_l <- predict(LHH.rf, newdata = SH_filt)
@@ -291,73 +295,28 @@ SH_filt$pred_ops_r <- round(pred_r,3)
 #Filtering Switch-Hitter data frame to display actual vs predicted OPS
 SH_filt2 <- SH_filt %>% select(name, player_id, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
+SH_filt2$Switch <- "no"
+
 #Creating conditional table to display results
 
-kable(SH_filt2, caption = "Switch Hitter") %>%
-  kable_styling() %>%
+SH_results <- kable(SH_filt2, caption = "Switch Hitter") %>%
+ kable_styling() %>%
   # Apply conditional formatting to the 'Wins' column
-  column_spec(1, background = spec_color(SH_filt2$pred_ops_l, option = "C"), color = "white") %>%
-  # Apply conditional formatting to rows based on 'Wins'
-  column_spec(which(SH_filt2$pred_ops_l > SH_filt2$ops_l), background = "lightgreen") %>%
-  column_spec(which(SH_filt2$pred_ops_l <= SH_filt2$ops_l), background = "lightcoral")
+  column_spec(4, color = "white", bold = TRUE,
+              background = case_when(
+                SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse ~ "green",
+                SH_filt2$pred_ops_l < SH_filt2$ops_l - rhh_rmse ~ "red",
+                SH_filt2$pred_ops_l > SH_filt2$ops_l - lhh_rmse & 
+                  SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "goldenrod2"
+              )) %>%
+  column_spec(6, color = "white", bold = TRUE,
+            background = case_when(
+              SH_filt2$pred_ops_r > SH_filt2$ops_r + rhh_rmse ~ "green",
+              SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "red",
+              SH_filt2$pred_ops_r > SH_filt2$ops_r - rhh_rmse & 
+                SH_filt2$pred_ops_r < SH_filt2$ops_r + rhh_rmse~ "goldenrod2"
+            )) 
 
-kable(SH_filt2[, c("name", "player_id", "ops_l", "pred_ops_l", "ops_r", 
-                   "pred_ops_r", "pred_ops_l_col")],
-      escape = FALSE,
-      caption = "Conditional Formatting for Specific Cells") %>%
-  kable_styling()
-
-SH_filt2$pred_ops_l_col <- ifelse(SH_filt2$pred_ops_l > SH_filt2$ops_l, 
-                            cell_spec(SH_filt2$pred_ops_l, background = "lightgreen", color = "black",
-                                      escape = FALSE),
-                            cell_spec(SH_filt2$pred_ops_l, background = "lightcoral", color = "black",
-                                      escape = FALSE))
-
-data$Wins_colored <- ifelse(data$Wins > 0.7, 
-                            cell_spec(data$Wins, 
-                                      background = "lightgreen", 
-                                      color = "black",
-                                      escape = FALSE),
-                            cell_spec(data$Wins, 
-                                      background = "lightcoral", 
-                                      color = "black",
-                                      escape = FALSE))
-
-
-
-#Add a new column 'Color' with default value 'black' for ops_l
-SH_filt$Color_ops_l <- "black"
-
-# Set new column values to appropriate colors for ops_l
-SH_filt$Color_ops_l[SH_filt$ops_l < SH_filt$pred_ops_l]="red"
-SH_filt$Color_ops_l[SH_filt$ops_l > SH_filt$pred_ops_l]="green"
-SH_filt$Color_ops_l[(SH_filt$pred_ops_l+.005) > SH_filt$ops_l & (SH_filt$pred_ops_l-.005) < SH_filt$ops_l]="darkgoldenrod1"
-
-#Plot Switch hitters real OPS against left pitchers against our model's predicted 
-# OPS if they decided to only hit left-handed
-ggplot(data = SH_filt, aes(x = ops_l, y = pred_ops_l)) +
-  geom_point(color = SH_filt$Color_ops_l) +
-  coord_fixed(1) +
-  geom_text_repel(data = SH_filt, aes(label=name), cex = 2.6, hjust=0.1, vjust=0) + 
-  labs(title = "Predicted OPS Hitting Lefty vs Actual OPS Hitting Righty vs Left-Handed Pitcher", x = "OPS as switch-hitter", y = "Predicted OPS hitting lefty") +
-  theme(plot.title=element_text(hjust=0.4, size = 15))
-
-#Add a new column 'Color' with default value 'black' for ops_r
-SH_filt$Color_ops_r <- "black"
-
-# Set new column values to appropriate colors for r_ops
-SH_filt$Color_ops_r[SH_filt$ops_r < SH_filt$pred_ops_r]="red"
-SH_filt$Color_ops_r[SH_filt$ops_r > SH_filt$pred_ops_r]="green"
-SH_filt$Color_ops_r[(SH_filt$pred_ops_r+.004) > SH_filt$ops_r & (SH_filt$pred_ops_r-.004) < SH_filt$ops_r]="darkgoldenrod1"
-
-#Plot Switch hitters real OPS against right-handed pitchers against 
-# our model's predicted OPS if they decided to only hit right-handed
-ggplot(data = SH_filt, aes(x = ops_r, y = pred_ops_r)) +
-  geom_point(color = SH_filt$Color_ops_r) +
-  coord_fixed(1) +
-  geom_text_repel(data = SH_filt, aes(label=name), cex = 2.6, hjust=0.1, vjust=0) + 
-  labs(title = "Predicted OPS: Right-Handed vs Actual OPS: Left-Handed vs Right-Handed Pitcher", x = "OPS as Switch-Hitter", y = "Predicted OPS: Right-Handed") +
-  theme(plot.title=element_text(hjust=0.4, size = 15))
 
 #Filter each Mullins table
 Mullins_LHH_2020 <- Mullins_LHH_2020 %>% select(Name, PlayerId, `Pitcher Handedness`,PA, wOBA, 
@@ -438,24 +397,31 @@ print(pred_Mullins_r)
 Mullins_full <- rbind(Mullins_2020, Mullins_2023)
 
 #Add the predicted OPS' to Mullins_fulldataframe
+Mullins_2020$pred_ops_l <- pred_Mullins_l
+Mullins_2020$pred_ops_r <- pred_Mullins_r
 Mullins_full$pred_ops_l <- pred_Mullins_l
 Mullins_full$pred_ops_r <- pred_Mullins_r
 
-#Add a new OPS column 'Color' to display pre- and post-switch hitting
-Mullins_full$Color_ops <- c("red", "green")
+Mullins_ops_pred <- Mullins_2020 %>%
+  select(name, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
-#Plot comparing Mullins OPS predictions vs actuals post-switch hitting against lefty pitcher
-ggplot(data = Mullins_full, aes(x = ops_l, y = pred_ops_l)) +
-  geom_point(color = Mullins_full$Color_ops) +
-  coord_fixed(1) +
-  geom_text_repel(data = Mullins_full, aes(label=name), cex = 2.6, hjust=0.1, vjust=0) + 
-  labs(title = "Cedric Mullins OPS vs Left-Handed Pitcher: Predictions vs Actuals", x = "Actual OPS", y = "Predicted OPS Hitting Lefty") +
-  theme(plot.title=element_text(hjust=0.4, size = 15))
 
-#Plot comparing Mullins OPS predictions vs actuals post-switch hitting against righty pitcher
-ggplot(data = Mullins_full, aes(x = ops_r, y = pred_ops_r)) +
-  geom_point(color = Mullins_full$Color_ops) +
-  coord_fixed(1) +
-  geom_text_repel(data = Mullins_full, aes(label=name), cex = 2.6, hjust=0.1, vjust=0) + 
-  labs(title = "Cedric Mullins OPS vs Right-Handed Pitcher: Predictions vs Actuals", x = "Actual OPS", y = "Predicted OPS Hitting Lefty") +
-  theme(plot.title=element_text(hjust=0.4, size = 15))
+
+Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins") %>%
+  kable_styling() %>%
+  # Apply conditional formatting to the 'Wins' column
+  column_spec(3, color = "white", bold = TRUE,
+              background = case_when(
+                Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l + lhh_rmse ~ "green",
+                Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - rhh_rmse ~ "red",
+                Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l - lhh_rmse & 
+                  Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse~ "goldenrod2"
+              )) %>%
+  column_spec(5, color = "white", bold = TRUE,
+              background = case_when(
+                Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r + rhh_rmse ~ "green",
+                Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "red",
+                Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r - rhh_rmse & 
+                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse~ "goldenrod2"
+              )) 
+Mullins_results
