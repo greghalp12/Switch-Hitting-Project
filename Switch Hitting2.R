@@ -149,39 +149,35 @@ SH_filt$Perf_hard <- "black"
 SH_filt$Perf_bb <- "black"
 SH_filt$Perf_k <- "black"
 
-
-############
 #Set new column values to appropriate Perfs for LHH vs RHH splits. Reversing comparison for GB and K
 SH_filt$Perf_w_oba[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "Both +"
 SH_filt$Perf_w_oba[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r < RHH_w_oba_mean] = "Both -"
 SH_filt$Perf_w_oba[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r < RHH_w_oba_mean] = "+ Left, - Right"
-SH_filt$Perf_w_oba[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "+ Right, - Left"
+SH_filt$Perf_w_oba[SH_filt$w_oba_l < LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "- Left, + Left"
 SH_filt$Perf_ops[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "Both +"
 SH_filt$Perf_ops[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "Both -"
-SH_filt$Perf_ops[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "goldenrod2"
-SH_filt$Perf_ops[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "goldenrod2"
+SH_filt$Perf_ops[SH_filt$ops_l > LHH_ops_mean & SH_filt$ops_r < RHH_ops_mean] = "+ Left, - Right"
+SH_filt$Perf_ops[SH_filt$ops_l < LHH_ops_mean & SH_filt$ops_r > RHH_ops_mean] = "- Left, + Right"
 SH_filt$Perf_gb[SH_filt$gb_l < LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "Both +"
 SH_filt$Perf_gb[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r > RHH_gb_mean] = "Both -"
-SH_filt$Perf_gb[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "+ Right, - Left"
+SH_filt$Perf_gb[SH_filt$gb_l > LHH_gb_mean & SH_filt$gb_r < RHH_gb_mean] = "- Left, + Right"
 SH_filt$Perf_gb[SH_filt$gb_l < LHH_gb_mean & SH_filt$gb_r > RHH_gb_mean] = "+ Left, - Right"
 SH_filt$Perf_ld[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "Both +"
 SH_filt$Perf_ld[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "Both -"
-SH_filt$Perf_ld[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "goldenrod2"
-SH_filt$Perf_ld[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "goldenrod2"
+SH_filt$Perf_ld[SH_filt$ld_l > LHH_ld_mean & SH_filt$ld_r < RHH_ld_mean] = "+ Left, - Right"
+SH_filt$Perf_ld[SH_filt$ld_l < LHH_ld_mean & SH_filt$ld_r > RHH_ld_mean] = "- Left, + Right"
 SH_filt$Perf_hard[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "Both +"
 SH_filt$Perf_hard[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "Both -"
-SH_filt$Perf_hard[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "goldenrod2"
-SH_filt$Perf_hard[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "goldenrod2"
+SH_filt$Perf_hard[SH_filt$hard_l > LHH_hard_mean & SH_filt$hard_r < RHH_hard_mean] = "+ Left, - Right"
+SH_filt$Perf_hard[SH_filt$hard_l < LHH_hard_mean & SH_filt$hard_r > RHH_hard_mean] = "- Left, + Right"
 SH_filt$Perf_bb[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "Both +"
 SH_filt$Perf_bb[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "Both -"
-SH_filt$Perf_bb[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "goldenrod2"
-SH_filt$Perf_bb[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "goldenrod2"
+SH_filt$Perf_bb[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "+ Left, - Right"
+SH_filt$Perf_bb[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "- Left, + Right"
 SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "Both +"
 SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "Both -"
-SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "goldenrod2"
-SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "goldenrod2"
-
-#################
+SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "-Left, + Right"
+SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "+Left, - Right"
 
 #EDA scatterplot for wOBA
 EDA_wOBA <- ggplot(data = SH_filt, aes(x = w_oba_r, y = w_oba_l, color = Perf_w_oba)) +
@@ -190,19 +186,18 @@ EDA_wOBA <- ggplot(data = SH_filt, aes(x = w_oba_r, y = w_oba_l, color = Perf_w_
   geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "wOBA Splits Compared to Same-Sided League Averages", x = "wOBA vs R", y = "wOBA vs L",
-       color = "Performance vs league average") +
+       color = "Performance vs League Average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
 
-#############################
 #EDA scatterplot for OPS
-EDA_OPS <- ggplot(data = SH_filt, aes(x = ops_r, y = ops_l)) +
+EDA_OPS <- ggplot(data = SH_filt, aes(x = ops_r, y = ops_l, color = Perf_ops)) +
   geom_vline(xintercept = RHH_ops_mean) +
   geom_hline(yintercept = LHH_ops_mean) +
   geom_point(color = SH_filt$Color_ops_b) +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "On-base + Slugging: Left vs Right-Handed Pitcher", x = "OPS vs R", y = "OPS vs L") +
+  labs(title = "OPS Splits Compared to Same-Sided League Averages", x = "OPS vs R", y = "OPS vs L",
+       color = "Performance vs League Average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
-EDA_OPS
 
 #EDA scatterplot for GB%
 EDA_GB <- ggplot(data = SH_filt, aes(x = gb_r, y = gb_l, color = Perf_gb)) +
@@ -213,53 +208,50 @@ EDA_GB <- ggplot(data = SH_filt, aes(x = gb_r, y = gb_l, color = Perf_gb)) +
   geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "Ground Ball% Splits Compared to Same-Sided League Averages", x = "GB% vs R", y = "GB% vs L",
-       color = "Performance vs league average") +
+       color = "Performance vs League Average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
-EDA_GB
 
 #EDA scatterplot for LD%
-EDA_LD <- ggplot(data = SH_filt, aes(x = ld_r, y = ld_l)) +
+EDA_LD <- ggplot(data = SH_filt, aes(x = ld_r, y = ld_l, color = Perf_ld)) +
   geom_vline(xintercept = RHH_ld_mean) +
   geom_hline(yintercept = LHH_ld_mean) +
   geom_point(color = SH_filt$Color_ld_b) +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Line Drive%: Left vs Right-Handed Pitcher", x = "LD vs R", y = "LD vs L") +
+  labs(title = "Line Drive% Splits Compared to Same-Sided League Averages", x = "LD vs R", y = "LD vs L",
+       color = "Performance vs League Average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
-EDA_LD
 
 #EDA scatterplot for Hard%
-EDA_HARD <- ggplot(data = SH_filt, aes(x = hard_r, y = hard_l)) +
+EDA_HARD <- ggplot(data = SH_filt, aes(x = hard_r, y = hard_l, color = Perf_hard)) +
   geom_vline(xintercept = RHH_hard_mean) +
   geom_hline(yintercept = LHH_hard_mean) +
   geom_point(color = SH_filt$Color_hard_b) +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Hard Hit%: Left vs Right-Handed Pitcher", x = "Hard vs R", y = "Hard vs L") +
+  labs(title = "Hard Hit% Splits Compared to Same-Sided League Averages", x = "Hard vs R", y = "Hard vs L",
+       color = "Performance vs League Average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
-EDA_HARD
 
 #EDA scatterplot for BB%
-EDA_BB <- ggplot(data = SH_filt, aes(x = bb_r, y = bb_l)) +
+EDA_BB <- ggplot(data = SH_filt, aes(x = bb_r, y = bb_l, color = Perf_bb)) +
   geom_vline(xintercept = RHH_bb_mean) +
   geom_hline(yintercept = LHH_bb_mean) +
   geom_point(color = SH_filt$Color_bb_b) +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Walk%: Left vs Right-Handed Pitcher", x = "BB vs R", y = "BB vs L") +
+  labs(title = "Walk% Splits Compared to Same-Sided League Averages", x = "BB vs R", y = "BB vs L",
+       color = "Performance vs League Average") +
   theme(plot.title=element_text(hjust=0.4, size = 15))
-EDA_BB
 
 #EDA scatterplot for K%
-EDA_K <- ggplot(data = SH_filt, aes(x = k_r, y = k_l)) +
+EDA_K <- ggplot(data = SH_filt, aes(x = k_r, y = k_l, color = Perf_k)) +
   geom_vline(xintercept = RHH_k_mean) +
   geom_hline(yintercept = LHH_k_mean) +
   scale_x_reverse() +
   scale_y_reverse() +
   geom_point(color = SH_filt$Color_k_b) +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Strikeout%: Left vs Right-Handed Pitcher", x = "K vs R", y = "K vs L") +
+  labs(title = "Strikout% Splits Compared to Same-Sided League Averages", x = "K vs R", y = "K vs L",
+       color = "Performance vs League Average") + 
   theme(plot.title=element_text(hjust=0.4, size = 15))
-EDA_K
-
-###########
 
 #Creating the model
 set.seed(111)
