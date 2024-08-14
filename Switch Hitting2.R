@@ -140,14 +140,14 @@ SH_filt <- SH_filt %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l,
                               bb_r = bb_percent_r, bb_l = bb_percent_l,
                               k_r = k_percent_r, k_l = k_percent_l)
 
-#Add a new columns 'Color' with default value 'black'
-SH_filt$Perf_w_oba <- "black"
-SH_filt$Perf_ops <- "black"
-SH_filt$Perf_gb <- "black"
-SH_filt$Perf_ld <- "black"
-SH_filt$Perf_hard <- "black"
-SH_filt$Perf_bb <- "black"
-SH_filt$Perf_k <- "black"
+#Add new columns 'Color' with default value 'Same as Average'
+SH_filt$Perf_w_oba <- "Same as Average"
+SH_filt$Perf_ops <- "Same as Average"
+SH_filt$Perf_gb <- "Same as Average"
+SH_filt$Perf_ld <- "Same as Average"
+SH_filt$Perf_hard <- "Same as Average"
+SH_filt$Perf_bb <- "Same as Average"
+SH_filt$Perf_k <- "Same as Average"
 
 #Set new column values to appropriate Perfs for LHH vs RHH splits. Reversing comparison for GB and K
 SH_filt$Perf_w_oba[SH_filt$w_oba_l > LHH_w_oba_mean & SH_filt$w_oba_r > RHH_w_oba_mean] = "Both +"
@@ -176,8 +176,8 @@ SH_filt$Perf_bb[SH_filt$bb_l > LHH_bb_mean & SH_filt$bb_r < RHH_bb_mean] = "+ Le
 SH_filt$Perf_bb[SH_filt$bb_l < LHH_bb_mean & SH_filt$bb_r > RHH_bb_mean] = "- Left, + Right"
 SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "Both +"
 SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "Both -"
-SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "-Left, + Right"
-SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "+Left, - Right"
+SH_filt$Perf_k[SH_filt$k_l > LHH_k_mean & SH_filt$k_r < RHH_k_mean] = "- Left, + Right"
+SH_filt$Perf_k[SH_filt$k_l < LHH_k_mean & SH_filt$k_r > RHH_k_mean] = "+ Left, - Right"
 
 #EDA scatterplot for wOBA
 EDA_wOBA <- ggplot(data = SH_filt, aes(x = w_oba_r, y = w_oba_l, color = Perf_w_oba)) +
@@ -193,7 +193,7 @@ EDA_wOBA <- ggplot(data = SH_filt, aes(x = w_oba_r, y = w_oba_l, color = Perf_w_
 EDA_OPS <- ggplot(data = SH_filt, aes(x = ops_r, y = ops_l, color = Perf_ops)) +
   geom_vline(xintercept = RHH_ops_mean) +
   geom_hline(yintercept = LHH_ops_mean) +
-  geom_point(color = SH_filt$Color_ops_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "OPS Splits Compared to Same-Sided League Averages", x = "OPS vs R", y = "OPS vs L",
        color = "Performance vs League Average") +
@@ -215,7 +215,7 @@ EDA_GB <- ggplot(data = SH_filt, aes(x = gb_r, y = gb_l, color = Perf_gb)) +
 EDA_LD <- ggplot(data = SH_filt, aes(x = ld_r, y = ld_l, color = Perf_ld)) +
   geom_vline(xintercept = RHH_ld_mean) +
   geom_hline(yintercept = LHH_ld_mean) +
-  geom_point(color = SH_filt$Color_ld_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "Line Drive% Splits Compared to Same-Sided League Averages", x = "LD vs R", y = "LD vs L",
        color = "Performance vs League Average") +
@@ -225,7 +225,7 @@ EDA_LD <- ggplot(data = SH_filt, aes(x = ld_r, y = ld_l, color = Perf_ld)) +
 EDA_HARD <- ggplot(data = SH_filt, aes(x = hard_r, y = hard_l, color = Perf_hard)) +
   geom_vline(xintercept = RHH_hard_mean) +
   geom_hline(yintercept = LHH_hard_mean) +
-  geom_point(color = SH_filt$Color_hard_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "Hard Hit% Splits Compared to Same-Sided League Averages", x = "Hard vs R", y = "Hard vs L",
        color = "Performance vs League Average") +
@@ -235,7 +235,7 @@ EDA_HARD <- ggplot(data = SH_filt, aes(x = hard_r, y = hard_l, color = Perf_hard
 EDA_BB <- ggplot(data = SH_filt, aes(x = bb_r, y = bb_l, color = Perf_bb)) +
   geom_vline(xintercept = RHH_bb_mean) +
   geom_hline(yintercept = LHH_bb_mean) +
-  geom_point(color = SH_filt$Color_bb_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "Walk% Splits Compared to Same-Sided League Averages", x = "BB vs R", y = "BB vs L",
        color = "Performance vs League Average") +
@@ -247,7 +247,7 @@ EDA_K <- ggplot(data = SH_filt, aes(x = k_r, y = k_l, color = Perf_k)) +
   geom_hline(yintercept = LHH_k_mean) +
   scale_x_reverse() +
   scale_y_reverse() +
-  geom_point(color = SH_filt$Color_k_b) +
+  geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
   labs(title = "Strikout% Splits Compared to Same-Sided League Averages", x = "K vs R", y = "K vs L",
        color = "Performance vs League Average") + 
