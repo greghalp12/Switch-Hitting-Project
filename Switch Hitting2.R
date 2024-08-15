@@ -344,8 +344,6 @@ SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart",
                                    SH_filt2$`Change?` == "No" ~ "black",
                                    SH_filt2$`Change?` == "Maybe" ~ "goldenrod3"))
 
-
-
 SH_results
 
 
