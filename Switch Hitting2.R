@@ -253,7 +253,7 @@ EDA_K <- ggplot(data = SH_filt, aes(x = k_r, y = k_l, color = Perf_k)) +
   scale_y_reverse() +
   geom_point() +
   geom_text_repel(aes(label = name), size = 3, color = "black") +
-  labs(title = "Strikout% Splits Compared to Same-Sided League Averages", x = "K vs R", y = "K vs L",
+  labs(title = "Strikeout% Splits Compared to Same-Sided League Averages", x = "K vs R", y = "K vs L",
        color = "Performance vs League Average") + 
   theme(plot.title=element_text(hjust=0.4, size = 15))
 
