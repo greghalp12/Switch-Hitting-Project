@@ -140,7 +140,7 @@ SH_filt <- SH_filt %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l,
                               bb_r = bb_percent_r, bb_l = bb_percent_l,
                               k_r = k_percent_r, k_l = k_percent_l)
 
-#Add new columns 'Color' with default value 'Same as Average'
+#Add new columns with default value 'Same as Average'
 SH_filt$Perf_w_oba <- "Same as Average"
 SH_filt$Perf_ops <- "Same as Average"
 SH_filt$Perf_gb <- "Same as Average"
@@ -270,6 +270,7 @@ LHH.rf <- randomForest(ops_l ~ w_oba_r + ops_r + gb_r + ld_r + hard_r + bb_r + k
                        data = LHH.train, importance = TRUE)
 print(LHH.rf)
 
+#Assigning LHH root mean square error to object
 lhh_rmse <- round(0.005468201, 3)
 
 #Splitting the RHH_splits data set into training and testing data
@@ -282,6 +283,7 @@ RHH.rf <- randomForest(ops_r ~ w_oba_l + ops_l + gb_l + ld_l + hard_l + bb_l + k
                        data = RHH.train, importance = TRUE)
 print(RHH.rf)
 
+#Assigning RHH root mean square error to object
 rhh_rmse <- round(0.003724938, 3)
 
 #Making predictions for Switch hitters only hitting lefty against LHP
@@ -299,7 +301,6 @@ SH_filt$pred_ops_r <- round(pred_r,3)
 #Filtering Switch-Hitter data frame to display actual vs predicted OPS
 SH_filt2 <- SH_filt %>% select(name, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
-
 # Creating a variable that will decide whether a hitter should look to stop switch hitting
 SH_filt2$`Change?` <- case_when(SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse & 
                                SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "Yes",
@@ -314,9 +315,7 @@ SH_filt2$`Change?` <- case_when(SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse 
                                SH_filt2$pred_ops_l > SH_filt2$ops_l - lhh_rmse & 
                                SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "Maybe")
 
-
 #Creating conditional table to display results
-
 SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart", 
                     col.names = c("Name", "Actual OPS v L",
                                   "Predicted OPS v L", "Actual OPS v R",
@@ -345,7 +344,6 @@ SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart",
                                    SH_filt2$`Change?` == "Maybe" ~ "goldenrod3"))
 
 SH_results
-
 
 #Filter each Mullins table
 Mullins_LHH_2020 <- Mullins_LHH_2020 %>% select(Name, PlayerId, `Pitcher Handedness`,PA, wOBA, 
@@ -418,24 +416,23 @@ Mullins_2023 <- Mullins_2023 %>% rename(gb_r = gb_percent_r, gb_l = gb_percent_l
 pred_Mullins_l <- predict(LHH.rf, newdata = Mullins_2020)
 print(pred_Mullins_l)
 
-#Making OPS predictions for Mullins prior to abandoning switch-hitting
 pred_Mullins_r <- predict(RHH.rf, newdata = Mullins_2020)
 print(pred_Mullins_r)
 
 #Create Mullins data frame with predicted, pre-, and post-switch hitting
 Mullins_full <- rbind(Mullins_2020, Mullins_2023)
 
-#Add the predicted OPS' to Mullins_fulldataframe
+#Add the predicted OPS' to Mullins_full dataframe
 Mullins_2020$pred_ops_l <- pred_Mullins_l
 Mullins_2020$pred_ops_r <- pred_Mullins_r
 Mullins_full$pred_ops_l <- pred_Mullins_l
 Mullins_full$pred_ops_r <- pred_Mullins_r
 
-#Filtering the Actual OPS and Predicted OPS'
+#Filtering Mullins Actual OPS and Predicted OPS'
 Mullins_ops_pred <- Mullins_2020 %>%
   select(name, ops_l, pred_ops_l, ops_r, pred_ops_r)
 
-#Creating the variable to decide whether a change should be
+#Creating the variable to decide whether a change should occur
 Mullins_ops_pred$`Change?` <- case_when(Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l + lhh_rmse & 
                                   Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "Yes",
                                 Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - lhh_rmse & 
@@ -448,7 +445,6 @@ Mullins_ops_pred$`Change?` <- case_when(Mullins_ops_pred$pred_ops_l > Mullins_op
                                 Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse & 
                                   Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l - lhh_rmse & 
                                   Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse ~ "Maybe")
-
 
 Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins",
                          col.names = c("Name", "Actual OPS v L",
