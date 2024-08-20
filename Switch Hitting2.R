@@ -327,7 +327,7 @@ SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart",
                 SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse ~ "red",
                 SH_filt2$pred_ops_l < SH_filt2$ops_l - lhh_rmse ~ "green",
                 SH_filt2$pred_ops_l > SH_filt2$ops_l - lhh_rmse & 
-                  SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "goldenrod1"
+                  SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "goldenrod3"
               )) %>%
 #Applying conditions to the Predicted OPS v R column
   column_spec(5, color = "white", bold = TRUE,
@@ -335,7 +335,7 @@ SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart",
               SH_filt2$pred_ops_r > SH_filt2$ops_r + rhh_rmse ~ "red",
               SH_filt2$pred_ops_r < SH_filt2$ops_r - rhh_rmse ~ "green",
               SH_filt2$pred_ops_r > SH_filt2$ops_r - rhh_rmse & 
-                SH_filt2$pred_ops_r < SH_filt2$ops_r + rhh_rmse~ "goldenrod1"
+                SH_filt2$pred_ops_r < SH_filt2$ops_r + rhh_rmse~ "goldenrod3"
             ))  %>%
 #Applying conditions to the Change column
   column_spec(6, bold = TRUE,
@@ -446,7 +446,7 @@ Mullins_ops_pred$`Change?` <- case_when(Mullins_ops_pred$pred_ops_l > Mullins_op
                                   Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l - lhh_rmse & 
                                   Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse ~ "Maybe")
 
-Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins",
+Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins Predicted OPS Chart",
                          col.names = c("Name", "Actual OPS v L",
                                        "Predicted OPS v L", "Actual OPS v R",
                                        "Predicted OPS v R", "Change?")) %>%
@@ -457,7 +457,7 @@ Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins",
                 Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l + lhh_rmse ~ "red",
                 Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l - rhh_rmse ~ "green",
                 Mullins_ops_pred$pred_ops_l > Mullins_ops_pred$ops_l - lhh_rmse & 
-                  Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse~ "goldenrod2"
+                  Mullins_ops_pred$pred_ops_l < Mullins_ops_pred$ops_l + lhh_rmse~ "goldenrod3"
               )) %>%
   # Apply conditional formatting to the Predicted OPS v R column
   column_spec(5, color = "white", bold = TRUE,
@@ -465,7 +465,7 @@ Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins",
                 Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r + rhh_rmse ~ "red",
                 Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "green",
                 Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r - rhh_rmse & 
-                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse~ "goldenrod2"
+                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse~ "goldenrod3
               )) %>%
 # Apply conditional formatting to the Change column
   column_spec(6, bold = TRUE,
