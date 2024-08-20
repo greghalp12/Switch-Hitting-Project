@@ -465,7 +465,7 @@ Mullins_results <- kable(Mullins_ops_pred, caption = "Cedric Mullins Predicted O
                 Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r + rhh_rmse ~ "red",
                 Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r - rhh_rmse ~ "green",
                 Mullins_ops_pred$pred_ops_r > Mullins_ops_pred$ops_r - rhh_rmse & 
-                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse~ "goldenrod3
+                  Mullins_ops_pred$pred_ops_r < Mullins_ops_pred$ops_r + rhh_rmse~ "goldenrod3"
               )) %>%
 # Apply conditional formatting to the Change column
   column_spec(6, bold = TRUE,
