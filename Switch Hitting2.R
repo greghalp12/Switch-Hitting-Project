@@ -316,7 +316,7 @@ SH_filt2$`Change?` <- case_when(SH_filt2$pred_ops_l > SH_filt2$ops_l + lhh_rmse 
                                SH_filt2$pred_ops_l < SH_filt2$ops_l + lhh_rmse ~ "Maybe")
 
 #Creating conditional table to display results
-SH_results <- kable(SH_filt2, caption = "Switch Hitter OPS Chart", 
+SH_results <- kable(SH_filt2, caption = "Switch Hitter Predicted OPS Chart", 
                     col.names = c("Name", "Actual OPS v L",
                                   "Predicted OPS v L", "Actual OPS v R",
                                   "Predicted OPS v R", "Change?")) %>%
